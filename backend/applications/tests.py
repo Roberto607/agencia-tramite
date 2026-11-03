@@ -242,7 +242,10 @@ class ApplicationApiTests(APITestCase):
             [
                 {
                     "id": application.pk,
-                    "label": f"#{application.pk} · Ana Pérez · Apostillamiento Consulado",
+                    "label": (
+                        f"#{application.pk} · Ana Pérez · Cédula de ciudadanía: "
+                        "12345 · Apostillamiento Consulado"
+                    ),
                     "url": reverse(
                         "admin:applications_application_change",
                         args=(application.pk,),
@@ -256,6 +259,56 @@ class ApplicationApiTests(APITestCase):
         )
         self.assertEqual(multiword_response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(multiword_response.json()["results"]), 1)
+
+    def test_admin_search_matches_displayed_identification_and_service_labels(self):
+        admin_user = get_user_model().objects.create_superuser(
+            "exact-search-admin",
+            "exact-search-admin@example.com",
+            "exact-search-password-for-test",
+        )
+        nit_application = Application.objects.create(
+            first_names="Ana",
+            last_names="Pérez",
+            identification_type="nit",
+            identification_number="900123",
+            email="ana@example.com",
+            service_type="apostillamiento_consulado",
+        )
+        Application.objects.create(
+            first_names="Luis",
+            last_names="Gómez",
+            identification_type="cedula",
+            identification_number="12345",
+            email="luis@example.com",
+            service_type="certificacion_nacimiento",
+        )
+        self.client.force_login(admin_user)
+
+        nit_suggestions = self.client.get(
+            reverse("admin:applications_application_search_suggestions"),
+            {"q": "NIT"},
+        )
+        nit_list = self.client.get(
+            reverse("admin:applications_application_changelist"),
+            {"q": "NIT"},
+        )
+        service_suggestions = self.client.get(
+            reverse("admin:applications_application_search_suggestions"),
+            {"q": "Apostillamiento Consulado"},
+        )
+
+        self.assertEqual(nit_suggestions.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [result["id"] for result in nit_suggestions.json()["results"]],
+            [nit_application.pk],
+        )
+        self.assertContains(nit_list, "Ana Pérez")
+        self.assertNotContains(nit_list, "Luis Gómez")
+        self.assertEqual(service_suggestions.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [result["id"] for result in service_suggestions.json()["results"]],
+            [nit_application.pk],
+        )
 
     def test_txt_export_contains_only_selected_application_without_attachments(self):
         admin_user = get_user_model().objects.create_superuser(

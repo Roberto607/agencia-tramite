@@ -7,10 +7,11 @@ from django.db.models import Count, Q
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
+from django.utils.dateparse import parse_date
 from django.utils.html import format_html
 from django.utils import timezone
 
-from .models import Application, ApplicationDocument
+from .models import Application, ApplicationDocument, IdentificationType, ServiceType
 
 
 class ApplicationDocumentInline(admin.TabularInline):
@@ -125,29 +126,25 @@ class ApplicationAdmin(admin.ModelAdmin):
         return custom_urls + super().get_urls()
 
     def search_suggestions(self, request):
-        if not self.has_view_permission(request):
+        if not self.has_view_or_change_permission(request):
             return JsonResponse({"detail": "No tienes permiso para consultar trámites."}, status=403)
 
         query = request.GET.get("q", "").strip()
-        if len(query) < 2:
+        if not query:
             return JsonResponse({"results": []})
 
-        matching_applications = self.get_queryset(request)
-        for term in query.split():
-            matching_applications = matching_applications.filter(
-                Q(first_names__icontains=term)
-                | Q(last_names__icontains=term)
-                | Q(identification_number__icontains=term)
-                | Q(email__icontains=term)
-                | Q(phone__icontains=term)
-                | Q(other_service__icontains=term)
-            )
+        matching_applications = self._filter_search_queryset(
+            self.get_queryset(request),
+            query,
+        )
         results = [
             {
                 "id": application.pk,
                 "label": (
                     f"#{application.pk} · {application.first_names} "
                     f"{application.last_names} · "
+                    f"{application.get_identification_type_display()}: "
+                    f"{application.identification_number} · "
                     f"{application.get_service_type_display()}"
                 ),
                 "url": reverse(
@@ -158,6 +155,50 @@ class ApplicationAdmin(admin.ModelAdmin):
             for application in matching_applications.order_by("-created_at", "-pk")[:8]
         ]
         return JsonResponse({"results": results})
+
+    @staticmethod
+    def _choice_values_matching(choices, term):
+        term = term.casefold()
+        return [
+            value
+            for value, label in choices
+            if term in str(value).casefold() or term in str(label).casefold()
+        ]
+
+    def _filter_search_queryset(self, queryset, query):
+        for term in query.split():
+            search_term = Q(first_names__icontains=term)
+            search_term |= Q(last_names__icontains=term)
+            search_term |= Q(identification_number__icontains=term)
+            search_term |= Q(email__icontains=term)
+            search_term |= Q(phone__icontains=term)
+            search_term |= Q(other_service__icontains=term)
+
+            identification_types = self._choice_values_matching(
+                IdentificationType.choices,
+                term,
+            )
+            if identification_types:
+                search_term |= Q(identification_type__in=identification_types)
+
+            service_types = self._choice_values_matching(ServiceType.choices, term)
+            if service_types:
+                search_term |= Q(service_type__in=service_types)
+
+            record_id = term.removeprefix("#")
+            if record_id.isdecimal():
+                search_term |= Q(pk=int(record_id))
+                search_term |= Q(document_total=int(record_id))
+
+            date_value = parse_date(term)
+            if date_value:
+                search_term |= Q(created_at__date=date_value)
+
+            queryset = queryset.filter(search_term)
+        return queryset
+
+    def get_search_results(self, request, queryset, search_term):
+        return self._filter_search_queryset(queryset, search_term), False
 
     @staticmethod
     def _txt_value(value):
