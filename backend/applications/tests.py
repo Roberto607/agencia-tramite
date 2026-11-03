@@ -166,6 +166,8 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(inbox, "Ana María Pérez López")
         self.assertContains(inbox, "ana@example.com")
         self.assertContains(inbox, "Descargar TXT")
+        self.assertContains(inbox, 'class="mobile-filter-toggle"', html=False)
+        self.assertContains(inbox, 'id="mobile-filter-content"', html=False)
         self.assertNotContains(inbox, "Inicio", html=False)
         self.assertContains(inbox, "#0c2851", html=False)
         self.assertContains(inbox, 'id="user-tools"', html=False)

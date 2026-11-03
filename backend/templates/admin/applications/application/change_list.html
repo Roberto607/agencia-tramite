@@ -1,0 +1,137 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls static admin_list %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .mobile-filter-toggle {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      #changelist {
+        display: flex;
+        flex-direction: column;
+      }
+
+      #changelist .changelist-form-container {
+        order: 1;
+        min-width: 0;
+        width: 100%;
+      }
+
+      #changelist-filter {
+        order: 0;
+        width: 100%;
+        margin: 0 0 14px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+
+      .mobile-filter-toggle {
+        display: flex;
+        width: 100%;
+        min-height: 46px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 15px;
+        border: 1px solid #d5e1f5;
+        border-radius: 6px;
+        background: #fff;
+        color: #0c2851;
+        font: inherit;
+        font-weight: 700;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .mobile-filter-toggle::after {
+        content: "+";
+        color: #1260df;
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      .mobile-filter-toggle[aria-expanded="true"]::after {
+        content: "−";
+      }
+
+      #changelist-filter-header {
+        display: none;
+      }
+
+      #changelist-filter .mobile-filter-content {
+        display: none;
+        margin-top: 8px;
+        padding: 12px 15px;
+        border: 1px solid #d5e1f5;
+        border-radius: 6px;
+        background: #fff;
+      }
+
+      #changelist-filter .mobile-filter-content.is-open {
+        display: block;
+      }
+
+      #changelist-filter h3 {
+        margin-top: 8px;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block filters %}
+  {% if cl.has_filters %}
+    <nav id="changelist-filter" aria-labelledby="changelist-filter-header">
+      <button
+        class="mobile-filter-toggle"
+        type="button"
+        aria-expanded="{% if cl.has_active_filters %}true{% else %}false{% endif %}"
+        aria-controls="mobile-filter-content"
+      >
+        {% translate "Filters" %}
+        {% if cl.has_active_filters %}<span>{% translate "Active" %}</span>{% endif %}
+      </button>
+      <h2 id="changelist-filter-header">{% translate 'Filter' %}</h2>
+      <div
+        class="mobile-filter-content{% if cl.has_active_filters %} is-open{% endif %}"
+        id="mobile-filter-content"
+      >
+        {% if cl.is_facets_optional or cl.has_active_filters %}
+          <div id="changelist-filter-extra-actions">
+            {% if cl.is_facets_optional %}
+              <h3>
+                {% if cl.add_facets %}
+                  <a href="{{ cl.remove_facet_link }}" class="hidelink">{% translate "Hide counts" %}</a>
+                {% else %}
+                  <a href="{{ cl.add_facet_link }}" class="viewlink">{% translate "Show counts" %}</a>
+                {% endif %}
+              </h3>
+            {% endif %}
+            {% if cl.has_active_filters %}
+              <h3><a href="{{ cl.clear_all_filters_qs }}">&#10006; {% translate "Clear all filters" %}</a></h3>
+            {% endif %}
+          </div>
+        {% endif %}
+        {% for spec in cl.filter_specs %}
+          {% admin_list_filter cl spec %}
+        {% endfor %}
+      </div>
+    </nav>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const toggle = document.querySelector(".mobile-filter-toggle");
+        const content = document.getElementById("mobile-filter-content");
+        if (!toggle || !content) return;
+
+        toggle.addEventListener("click", function () {
+          const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+          toggle.setAttribute("aria-expanded", String(!isExpanded));
+          content.classList.toggle("is-open", !isExpanded);
+        });
+      });
+    </script>
+  {% endif %}
+{% endblock %}

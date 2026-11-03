@@ -41,6 +41,7 @@ class ApplicationDocumentInline(admin.TabularInline):
 
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
+    change_list_template = "admin/applications/application/change_list.html"
     list_display = (
         "id",
         "full_name",
