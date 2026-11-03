@@ -1,0 +1,36 @@
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ('applications', '0002_alter_application_options_and_more'),
+    ]
+
+    operations = [
+        migrations.AddField(
+            model_name='application',
+            name='other_service',
+            field=models.CharField(blank=True, default='', max_length=255),
+        ),
+        migrations.AddField(
+            model_name='application',
+            name='service_type',
+            field=models.CharField(
+                choices=[
+                    ('certificacion_nacimiento', 'Certificación de Nacimiento'),
+                    ('certificacion_antecedentes_penales', 'Certificación de antecedentes penales'),
+                    ('certificacion_matrimonio_divorcio_solteria', 'Certificación de matrimonio, divorcio, Fe de soltería'),
+                    ('certificacion_viudez', 'Certificación de viudez'),
+                    ('certificacion_defuncion', 'Certificación de defunción'),
+                    ('titulos_estudio_certificacion_notas_plan_tematico', 'Títulos de estudio, certificación de notas y plan temático'),
+                    ('representacion_juridica', 'Representación jurídica (abogados)'),
+                    ('otros', 'Otros'),
+                    ('traducciones_certificadas', 'Traducciones certificadas'),
+                    ('apostillamiento_consulado', 'Apostillamiento Consulado'),
+                ],
+                default='apostillamiento_consulado',
+                max_length=80,
+            ),
+        ),
+    ]

@@ -1,0 +1,118 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title }} | LB&amp;A Consulter{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="icon" type="image/png" href="{% static 'applications/logo-lba.png' %}">
+{% endblock %}
+
+{% block branding %}
+<div id="site-name"><a href="{% url 'admin:index' %}">LB&amp;A Consulter</a></div>
+{% endblock %}
+
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-global %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  :root {
+    --primary: #1260df;
+    --primary-fg: #fff;
+    --secondary: #103c79;
+    --accent: #73bafa;
+    --body-bg: #f3f7fc;
+    --body-fg: #173456;
+    --header-bg: #0c2851;
+    --header-color: #fff;
+    --header-branding-color: #fff;
+    --header-link-color: #fff;
+    --breadcrumbs-bg: #103c79;
+    --breadcrumbs-fg: #d7e5fa;
+    --breadcrumbs-link-fg: #fff;
+    --link-fg: #1260df;
+    --link-hover-color: #0d4db7;
+    --link-selected-fg: #0c2851;
+    --selected-bg: #e8f0fc;
+    --selected-row: #e8f0fc;
+    --button-bg: #1260df;
+    --button-hover-bg: #0d4db7;
+    --default-button-bg: #103c79;
+    --default-button-hover-bg: #0c2e60;
+    --object-tools-bg: #103c79;
+    --object-tools-hover-bg: #0c2e60;
+  }
+
+  #header {
+    border-bottom: 3px solid #1260df;
+    background: #0c2851;
+  }
+
+  #site-name a {
+    color: #fff !important;
+    font-weight: 800;
+  }
+
+  #user-tools,
+  #user-tools a {
+    color: #d7e5fa !important;
+  }
+
+  .breadcrumbs {
+    display: none;
+  }
+
+  a.addlink,
+  a.changelink,
+  a.viewlink {
+    color: #1260df;
+    background-image: none !important;
+    padding-left: 0;
+  }
+
+  .object-tools a.addlink,
+  .object-tools a.viewsitelink {
+    background-image: none !important;
+    padding-right: 12px;
+  }
+
+  #changelist-filter h2,
+  .module caption {
+    background: #0c2851;
+  }
+
+  #changelist-filter li.selected a {
+    color: #0c2851;
+    font-weight: 700;
+  }
+
+  .object-tools a,
+  .button,
+  input[type="submit"],
+  input[type="button"],
+  .submit-row input {
+    border-radius: 4px;
+    background: #1260df;
+    color: #fff;
+  }
+
+  .object-tools a:hover,
+  .button:hover,
+  input[type="submit"]:hover,
+  input[type="button"]:hover,
+  .submit-row input:hover {
+    background: #0d4db7;
+  }
+
+  #changelist table thead th {
+    background: #e8f0fc;
+  }
+
+  #changelist .selected,
+  #changelist tr.selected {
+    background: #e8f0fc;
+  }
+</style>
+{% endblock %}

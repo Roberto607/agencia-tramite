@@ -1,0 +1,195 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block header %}{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+{% block usertools %}{% endblock %}
+{% block nav-global %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+{% block content_title %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  body.login {
+    background: #f3f7fc;
+  }
+
+  .login #container {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .login #content {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    padding: 64px 20px 80px;
+  }
+
+  .login #content-main {
+    float: none;
+    width: min(100%, 460px);
+    margin: 0 auto;
+  }
+
+  .login-panel {
+    padding: 36px;
+    border: 1px solid #dce5f1;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 18px 48px rgba(12, 40, 81, .10);
+  }
+
+  .login-panel__eyebrow {
+    margin: 0 0 10px;
+    color: #1260df;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .login-panel h1 {
+    margin: 0 0 10px;
+    color: #0c2851;
+    font-size: 27px;
+    line-height: 1.2;
+    font-weight: 800;
+  }
+
+  .login-panel__intro {
+    margin: 0 0 26px;
+    color: #536780;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .login-panel .login-error,
+  .login-panel .errorlist {
+    margin: 0 0 18px;
+    padding: 11px 13px;
+    border: 1px solid #efc3c3;
+    border-radius: 4px;
+    background: #fff4f4;
+    color: #902c2c;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .login-field {
+    margin-bottom: 19px;
+  }
+
+  .login-field label {
+    display: block;
+    margin-bottom: 8px;
+    color: #173456;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .login-field input {
+    width: 100%;
+    min-height: 46px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #cbd6e5;
+    border-radius: 4px;
+    background: #fff;
+    color: #173456;
+    font: inherit;
+  }
+
+  .login-field input:focus {
+    border-color: #1260df;
+    outline: 3px solid rgba(18, 96, 223, .14);
+  }
+
+  .login-submit {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 5px;
+    border: 0;
+    border-radius: 4px;
+    background: #1260df;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 150ms ease, transform 150ms ease;
+  }
+
+  .login-submit:hover {
+    background: #0d4db7;
+    transform: translateY(-1px);
+  }
+
+  .login-panel__footnote {
+    margin: 22px 0 0;
+    padding-top: 16px;
+    border-top: 1px solid #e5ebf3;
+    color: #718198;
+    font-size: 12px;
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    .login #content {
+      padding: 36px 16px 56px;
+    }
+
+    .login-panel {
+      padding: 26px 21px;
+    }
+
+    .login-panel h1 {
+      font-size: 23px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <section class="login-panel" aria-labelledby="login-title">
+    <p class="login-panel__eyebrow">Área administrativa</p>
+    <h1 id="login-title">Administración de LB&amp;A Consulter</h1>
+    <p class="login-panel__intro">Inicia sesión con tu cuenta para continuar.</p>
+
+    {% if form.errors %}
+      <div class="login-error" role="alert">
+        {% if form.non_field_errors %}
+          {{ form.non_field_errors }}
+        {% else %}
+          Revisa los datos ingresados e inténtalo de nuevo.
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <form action="{{ app_path }}" method="post" id="login-form">
+      {% csrf_token %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      {% if user.is_authenticated %}
+        <p class="login-error" role="alert">La cuenta actual no tiene permisos para acceder al panel.</p>
+      {% endif %}
+
+      <div class="login-field">
+        <label for="{{ form.username.id_for_label }}">Nombre de usuario</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+      </div>
+      <div class="login-field">
+        <label for="{{ form.password.id_for_label }}">Contraseña</label>
+        {{ form.password }}
+        {{ form.password.errors }}
+      </div>
+      <button class="login-submit" type="submit">Iniciar sesión</button>
+    </form>
+
+    <p class="login-panel__footnote">Acceso exclusivo para personal autorizado.</p>
+  </section>
+</div>
+{% endblock %}
