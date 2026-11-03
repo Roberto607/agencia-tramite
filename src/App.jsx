@@ -198,7 +198,13 @@ function ApplicationForm() {
       setDocuments([])
       setSelectedService('')
     } catch (error) {
-      setSubmissionError(error instanceof Error ? error.message : 'No se pudo conectar con el servidor.')
+      setSubmissionError(
+        error instanceof TypeError
+          ? 'No pudimos confirmar el resultado del envío. La solicitud podría haberse guardado; verifica con el equipo antes de volver a enviarla.'
+          : error instanceof Error
+            ? error.message
+            : 'No se pudo conectar con el servidor.',
+      )
     } finally {
       setIsSubmitting(false)
     }
