@@ -102,6 +102,7 @@
       const input = document.getElementById("searchbar");
       const suggestions = document.getElementById("application-search-suggestions");
       if (!search || !input || !suggestions) return;
+      const form = document.getElementById("changelist-search");
 
       input.setAttribute("role", "combobox");
       input.setAttribute("aria-autocomplete", "list");
@@ -134,6 +135,11 @@
         const query = input.value.trim();
         if (query.length < 2) {
           closeSuggestions();
+          if (!query && form) {
+            timeout = window.setTimeout(function () {
+              form.requestSubmit();
+            }, 200);
+          }
           return;
         }
 
@@ -183,7 +189,6 @@
         if (!search.contains(event.target)) closeSuggestions();
       });
 
-      const form = document.getElementById("changelist-search");
       if (form) {
         form.addEventListener("submit", function () {
           window.clearTimeout(timeout);

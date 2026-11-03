@@ -168,6 +168,7 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(inbox, "Descargar TXT")
         self.assertContains(inbox, 'class="application-search"', html=False)
         self.assertContains(inbox, 'id="application-search-suggestions"', html=False)
+        self.assertContains(inbox, "form.requestSubmit();", html=False)
         self.assertContains(
             inbox,
             'data-suggestions-url="/admin/applications/application/search-suggestions/"',
@@ -214,6 +215,38 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(response, "Ana Pérez")
         self.assertNotContains(response, "Luis Gómez")
         self.assertContains(response, 'value="ana"', html=False)
+
+    def test_cleared_admin_search_returns_full_application_list(self):
+        admin_user = get_user_model().objects.create_superuser(
+            "clear-search-admin",
+            "clear-search-admin@example.com",
+            "clear-search-password-for-test",
+        )
+        Application.objects.create(
+            first_names="Ana",
+            last_names="Pérez",
+            identification_type="cedula",
+            identification_number="12345",
+            email="ana@example.com",
+        )
+        Application.objects.create(
+            first_names="Luis",
+            last_names="Gómez",
+            identification_type="nit",
+            identification_number="900123",
+            email="luis@example.com",
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(
+            reverse("admin:applications_application_changelist"),
+            {"q": ""},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, "Ana Pérez")
+        self.assertContains(response, "Luis Gómez")
+        self.assertContains(response, 'value=""', html=False)
 
     def test_admin_search_suggestions_return_matching_application_links(self):
         admin_user = get_user_model().objects.create_superuser(
