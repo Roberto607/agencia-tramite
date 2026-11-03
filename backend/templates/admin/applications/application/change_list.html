@@ -10,21 +10,29 @@
 
     @media (max-width: 767px) {
       #changelist {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
       }
 
       #changelist .changelist-form-container {
-        order: 1;
+        display: contents;
+      }
+
+      #changelist #toolbar {
+        grid-row: 1;
         min-width: 0;
         width: 100%;
       }
 
+      #changelist .toplinks {
+        grid-row: 2;
+      }
+
       #changelist-filter {
         flex: 0 0 auto;
-        order: 0;
+        grid-row: 3;
         width: 100%;
-        margin: 0 0 14px;
+        margin: 0 0 8px;
         padding: 0;
         border: 0;
         background: transparent;
@@ -33,6 +41,12 @@
 
       .change-list .filtered {
         min-height: 0;
+      }
+
+      #changelist #changelist-form {
+        grid-row: 4;
+        min-width: 0;
+        width: 100%;
       }
 
       .mobile-filter-toggle {
