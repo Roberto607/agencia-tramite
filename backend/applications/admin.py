@@ -3,8 +3,8 @@ from pathlib import Path
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count
-from django.http import FileResponse, Http404, HttpResponse
+from django.db.models import Count, Q
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.html import format_html
@@ -55,9 +55,8 @@ class ApplicationAdmin(admin.ModelAdmin):
         "created_at",
     )
     list_display_links = ("id", "full_name")
-    list_filter = ("identification_type", "service_type", "created_at")
+    list_filter = ()
     search_fields = ("first_names", "last_names", "identification_number", "email", "phone", "other_service")
-    date_hierarchy = "created_at"
     ordering = ("-created_at",)
     list_per_page = 25
     inlines = (ApplicationDocumentInline,)
@@ -103,6 +102,11 @@ class ApplicationAdmin(admin.ModelAdmin):
     def get_urls(self):
         custom_urls = [
             path(
+                "search-suggestions/",
+                self.admin_site.admin_view(self.search_suggestions),
+                name="applications_application_search_suggestions",
+            ),
+            path(
                 "<int:object_id>/export-txt/",
                 self.admin_site.admin_view(self.export_txt),
                 name="applications_application_export_txt",
@@ -119,6 +123,41 @@ class ApplicationAdmin(admin.ModelAdmin):
             ),
         ]
         return custom_urls + super().get_urls()
+
+    def search_suggestions(self, request):
+        if not self.has_view_permission(request):
+            return JsonResponse({"detail": "No tienes permiso para consultar trámites."}, status=403)
+
+        query = request.GET.get("q", "").strip()
+        if len(query) < 2:
+            return JsonResponse({"results": []})
+
+        matching_applications = self.get_queryset(request)
+        for term in query.split():
+            matching_applications = matching_applications.filter(
+                Q(first_names__icontains=term)
+                | Q(last_names__icontains=term)
+                | Q(identification_number__icontains=term)
+                | Q(email__icontains=term)
+                | Q(phone__icontains=term)
+                | Q(other_service__icontains=term)
+            )
+        results = [
+            {
+                "id": application.pk,
+                "label": (
+                    f"#{application.pk} · {application.first_names} "
+                    f"{application.last_names} · "
+                    f"{application.get_service_type_display()}"
+                ),
+                "url": reverse(
+                    "admin:applications_application_change",
+                    args=(application.pk,),
+                ),
+            }
+            for application in matching_applications.order_by("-created_at", "-pk")[:8]
+        ]
+        return JsonResponse({"results": results})
 
     @staticmethod
     def _txt_value(value):

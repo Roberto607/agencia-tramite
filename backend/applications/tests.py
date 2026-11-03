@@ -166,10 +166,15 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(inbox, "Ana María Pérez López")
         self.assertContains(inbox, "ana@example.com")
         self.assertContains(inbox, "Descargar TXT")
-        self.assertContains(inbox, 'class="mobile-filter-toggle"', html=False)
-        self.assertContains(inbox, 'id="mobile-filter-content"', html=False)
-        self.assertContains(inbox, 'id="changelist-search"', html=False)
-        self.assertContains(inbox, 'searchInput.addEventListener("input"', html=False)
+        self.assertContains(inbox, 'class="application-search"', html=False)
+        self.assertContains(inbox, 'id="application-search-suggestions"', html=False)
+        self.assertContains(
+            inbox,
+            'data-suggestions-url="/admin/applications/application/search-suggestions/"',
+            html=False,
+        )
+        self.assertNotContains(inbox, 'id="changelist-filter"', html=False)
+        self.assertContains(inbox, 'input.addEventListener("input"', html=False)
         self.assertNotContains(inbox, "Inicio", html=False)
         self.assertContains(inbox, "#0c2851", html=False)
         self.assertContains(inbox, 'id="user-tools"', html=False)
@@ -209,6 +214,48 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(response, "Ana Pérez")
         self.assertNotContains(response, "Luis Gómez")
         self.assertContains(response, 'value="ana"', html=False)
+
+    def test_admin_search_suggestions_return_matching_application_links(self):
+        admin_user = get_user_model().objects.create_superuser(
+            "suggestion-admin",
+            "suggestion-admin@example.com",
+            "suggestion-password-for-test",
+        )
+        application = Application.objects.create(
+            first_names="Ana",
+            last_names="Pérez",
+            identification_type="cedula",
+            identification_number="12345",
+            email="ana@example.com",
+            service_type="apostillamiento_consulado",
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(
+            reverse("admin:applications_application_search_suggestions"),
+            {"q": "ana"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.json()["results"],
+            [
+                {
+                    "id": application.pk,
+                    "label": f"#{application.pk} · Ana Pérez · Apostillamiento Consulado",
+                    "url": reverse(
+                        "admin:applications_application_change",
+                        args=(application.pk,),
+                    ),
+                }
+            ],
+        )
+        multiword_response = self.client.get(
+            reverse("admin:applications_application_search_suggestions"),
+            {"q": "ana pé"},
+        )
+        self.assertEqual(multiword_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(multiword_response.json()["results"]), 1)
 
     def test_txt_export_contains_only_selected_application_without_attachments(self):
         admin_user = get_user_model().objects.create_superuser(

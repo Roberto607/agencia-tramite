@@ -1,171 +1,195 @@
 {% extends "admin/change_list.html" %}
-{% load i18n admin_urls static admin_list %}
+{% load i18n admin_list %}
 
 {% block extrastyle %}
   {{ block.super }}
   <style>
-    .mobile-filter-toggle {
+    .application-search {
+      position: relative;
+      z-index: 3;
+    }
+
+    .application-search__suggestions {
+      position: absolute;
+      z-index: 5;
+      top: 100%;
+      right: 0;
+      left: 0;
       display: none;
+      max-height: min(50vh, 360px);
+      margin: 0;
+      padding: 5px 0;
+      overflow-y: auto;
+      border: 1px solid #d5e1f5;
+      border-radius: 0 0 6px 6px;
+      background: #fff;
+      box-shadow: 0 8px 20px rgba(12, 40, 81, .14);
+      list-style: none;
+    }
+
+    .application-search__suggestions.is-visible {
+      display: block;
+    }
+
+    .application-search__suggestion {
+      display: block;
+      padding: 10px 14px;
+      color: #173456;
+      text-decoration: none;
+    }
+
+    .application-search__suggestion:hover,
+    .application-search__suggestion:focus {
+      background: #e8f0fc;
+      color: #0c2851;
+    }
+
+    .application-search__empty {
+      padding: 10px 14px;
+      color: #536780;
     }
 
     @media (max-width: 767px) {
       #changelist {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      #changelist .changelist-form-container {
-        display: contents;
-      }
-
-      #changelist #toolbar {
-        grid-row: 1;
-        min-width: 0;
-        width: 100%;
-      }
-
-      #changelist .toplinks {
-        grid-row: 2;
-      }
-
-      #changelist-filter {
-        flex: 0 0 auto;
-        grid-row: 3;
-        width: 100%;
-        margin: 0 0 8px;
-        padding: 0;
-        border: 0;
-        background: transparent;
-        box-shadow: none;
-      }
-
-      .change-list .filtered {
+        display: block;
         min-height: 0;
       }
 
-      #changelist #changelist-form {
-        grid-row: 4;
-        min-width: 0;
-        width: 100%;
-      }
-
-      .mobile-filter-toggle {
-        display: flex;
-        width: 100%;
-        min-height: 46px;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 15px;
-        border: 1px solid #d5e1f5;
-        border-radius: 6px;
-        background: #fff;
-        color: #0c2851;
-        font: inherit;
-        font-weight: 700;
-        text-align: left;
-        cursor: pointer;
-      }
-
-      .mobile-filter-toggle::after {
-        content: "+";
-        color: #1260df;
-        font-size: 22px;
-        line-height: 1;
-      }
-
-      .mobile-filter-toggle[aria-expanded="true"]::after {
-        content: "−";
-      }
-
-      #changelist-filter-header {
-        display: none;
-      }
-
-      #changelist-filter .mobile-filter-content {
-        display: none;
-        margin-top: 8px;
-        padding: 12px 15px;
-        border: 1px solid #d5e1f5;
-        border-radius: 6px;
-        background: #fff;
-      }
-
-      #changelist-filter .mobile-filter-content.is-open {
+      #changelist .changelist-form-container {
         display: block;
+        width: 100%;
+        min-width: 0;
       }
 
-      #changelist-filter h3 {
-        margin-top: 8px;
+      #changelist #toolbar,
+      #changelist #changelist-form {
+        width: 100%;
+        min-width: 0;
+      }
+
+      #changelist-filter {
+        display: none;
       }
     }
   </style>
 {% endblock %}
 
-{% block filters %}
-  {% if cl.has_filters %}
-    <nav id="changelist-filter" aria-labelledby="changelist-filter-header">
-      <button
-        class="mobile-filter-toggle"
-        type="button"
-        aria-expanded="{% if cl.has_active_filters %}true{% else %}false{% endif %}"
-        aria-controls="mobile-filter-content"
-      >
-        {% translate "Filters" %}
-        {% if cl.has_active_filters %}<span>{% translate "Active" %}</span>{% endif %}
-      </button>
-      <h2 id="changelist-filter-header">{% translate 'Filter' %}</h2>
-      <div
-        class="mobile-filter-content{% if cl.has_active_filters %} is-open{% endif %}"
-        id="mobile-filter-content"
-      >
-        {% if cl.is_facets_optional or cl.has_active_filters %}
-          <div id="changelist-filter-extra-actions">
-            {% if cl.is_facets_optional %}
-              <h3>
-                {% if cl.add_facets %}
-                  <a href="{{ cl.remove_facet_link }}" class="hidelink">{% translate "Hide counts" %}</a>
-                {% else %}
-                  <a href="{{ cl.add_facet_link }}" class="viewlink">{% translate "Show counts" %}</a>
-                {% endif %}
-              </h3>
-            {% endif %}
-            {% if cl.has_active_filters %}
-              <h3><a href="{{ cl.clear_all_filters_qs }}">&#10006; {% translate "Clear all filters" %}</a></h3>
-            {% endif %}
-          </div>
-        {% endif %}
-        {% for spec in cl.filter_specs %}
-          {% admin_list_filter cl spec %}
-        {% endfor %}
-      </div>
-    </nav>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        const toggle = document.querySelector(".mobile-filter-toggle");
-        const content = document.getElementById("mobile-filter-content");
-        if (toggle && content) {
-          toggle.addEventListener("click", function () {
-            const isExpanded = toggle.getAttribute("aria-expanded") === "true";
-            toggle.setAttribute("aria-expanded", String(!isExpanded));
-            content.classList.toggle("is-open", !isExpanded);
-          });
+{% block search %}
+  {% if cl.search_fields %}
+    <div
+      class="application-search"
+      data-suggestions-url="{% url 'admin:applications_application_search_suggestions' %}"
+    >
+      {% search_form cl %}
+      <ul
+        class="application-search__suggestions"
+        id="application-search-suggestions"
+        role="listbox"
+        aria-label="{% translate 'Matching applications' %}"
+        aria-live="polite"
+      ></ul>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block filters %}{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const search = document.querySelector(".application-search");
+      const input = document.getElementById("searchbar");
+      const suggestions = document.getElementById("application-search-suggestions");
+      if (!search || !input || !suggestions) return;
+
+      input.setAttribute("role", "combobox");
+      input.setAttribute("aria-autocomplete", "list");
+      input.setAttribute("aria-controls", suggestions.id);
+      input.setAttribute("aria-expanded", "false");
+
+      let timeout;
+      let controller;
+
+      function closeSuggestions() {
+        suggestions.replaceChildren();
+        suggestions.classList.remove("is-visible");
+        input.setAttribute("aria-expanded", "false");
+      }
+
+      function showMessage(message) {
+        const item = document.createElement("li");
+        item.className = "application-search__empty";
+        item.setAttribute("role", "presentation");
+        item.textContent = message;
+        suggestions.replaceChildren(item);
+        suggestions.classList.add("is-visible");
+        input.setAttribute("aria-expanded", "true");
+      }
+
+      input.addEventListener("input", function () {
+        window.clearTimeout(timeout);
+        if (controller) controller.abort();
+
+        const query = input.value.trim();
+        if (query.length < 2) {
+          closeSuggestions();
+          return;
         }
 
-        const searchForm = document.getElementById("changelist-search");
-        const searchInput = document.getElementById("searchbar");
-        if (!searchForm || !searchInput) return;
+        timeout = window.setTimeout(async function () {
+          controller = new AbortController();
+          try {
+            const url = new URL(search.dataset.suggestionsUrl, window.location.origin);
+            url.searchParams.set("q", query);
+            const response = await fetch(url, {
+              headers: { Accept: "application/json" },
+              signal: controller.signal,
+            });
+            if (!response.ok) throw new Error("No se pudieron cargar las sugerencias.");
 
-        let searchTimeout;
-        searchInput.addEventListener("input", function () {
-          window.clearTimeout(searchTimeout);
-          searchTimeout = window.setTimeout(function () {
-            searchForm.requestSubmit();
-          }, 400);
-        });
-        searchForm.addEventListener("submit", function () {
-          window.clearTimeout(searchTimeout);
-        });
+            const { results } = await response.json();
+            if (input.value.trim() !== query) return;
+            if (results.length === 0) {
+              showMessage("No se encontraron trámites.");
+              return;
+            }
+
+            const items = results.map(function (result) {
+              const item = document.createElement("li");
+              item.setAttribute("role", "option");
+              const link = document.createElement("a");
+              link.className = "application-search__suggestion";
+              link.href = result.url;
+              link.textContent = result.label;
+              item.append(link);
+              return item;
+            });
+            suggestions.replaceChildren(...items);
+            suggestions.classList.add("is-visible");
+            input.setAttribute("aria-expanded", "true");
+          } catch (error) {
+            if (error.name === "AbortError") return;
+            showMessage("No se pudieron cargar las sugerencias. Puedes buscar con Enter.");
+          }
+        }, 250);
       });
-    </script>
-  {% endif %}
+
+      input.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") closeSuggestions();
+      });
+
+      document.addEventListener("click", function (event) {
+        if (!search.contains(event.target)) closeSuggestions();
+      });
+
+      const form = document.getElementById("changelist-search");
+      if (form) {
+        form.addEventListener("submit", function () {
+          window.clearTimeout(timeout);
+          closeSuggestions();
+        });
+      }
+    });
+  </script>
 {% endblock %}
