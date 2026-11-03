@@ -59,7 +59,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-USE_SQLITE = os.getenv("USE_SQLITE", "1") == "1"
+USE_SQLITE = os.getenv("USE_SQLITE", "0") == "1"
 
 if DATABASE_URL:
     DATABASES = {
