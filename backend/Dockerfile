@@ -16,3 +16,4 @@ COPY --chown=django:django . .
 
 USER django
 EXPOSE 8000
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
