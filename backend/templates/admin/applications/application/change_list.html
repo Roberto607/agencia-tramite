@@ -143,12 +143,27 @@
       document.addEventListener("DOMContentLoaded", function () {
         const toggle = document.querySelector(".mobile-filter-toggle");
         const content = document.getElementById("mobile-filter-content");
-        if (!toggle || !content) return;
+        if (toggle && content) {
+          toggle.addEventListener("click", function () {
+            const isExpanded = toggle.getAttribute("aria-expanded") === "true";
+            toggle.setAttribute("aria-expanded", String(!isExpanded));
+            content.classList.toggle("is-open", !isExpanded);
+          });
+        }
 
-        toggle.addEventListener("click", function () {
-          const isExpanded = toggle.getAttribute("aria-expanded") === "true";
-          toggle.setAttribute("aria-expanded", String(!isExpanded));
-          content.classList.toggle("is-open", !isExpanded);
+        const searchForm = document.getElementById("changelist-search");
+        const searchInput = document.getElementById("searchbar");
+        if (!searchForm || !searchInput) return;
+
+        let searchTimeout;
+        searchInput.addEventListener("input", function () {
+          window.clearTimeout(searchTimeout);
+          searchTimeout = window.setTimeout(function () {
+            searchForm.requestSubmit();
+          }, 400);
+        });
+        searchForm.addEventListener("submit", function () {
+          window.clearTimeout(searchTimeout);
         });
       });
     </script>
