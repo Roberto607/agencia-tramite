@@ -1,13 +1,87 @@
+import os
+from io import StringIO
 from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import CommandError, call_command
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .models import Application, ApplicationDocument
+
+
+class BootstrapSuperuserTests(APITestCase):
+    def test_bootstrap_skips_when_environment_is_unset(self):
+        with patch.dict(
+            os.environ,
+            {
+                "DJANGO_SUPERUSER_USERNAME": "",
+                "DJANGO_SUPERUSER_EMAIL": "",
+                "DJANGO_SUPERUSER_PASSWORD": "",
+            },
+        ):
+            call_command("bootstrap_superuser")
+
+        self.assertFalse(get_user_model().objects.exists())
+
+    def test_bootstrap_requires_all_environment_values(self):
+        with patch.dict(
+            os.environ,
+            {
+                "DJANGO_SUPERUSER_USERNAME": "site-admin",
+                "DJANGO_SUPERUSER_EMAIL": "",
+                "DJANGO_SUPERUSER_PASSWORD": "",
+            },
+        ):
+            with self.assertRaisesMessage(
+                CommandError, "Set DJANGO_SUPERUSER_USERNAME"
+            ):
+                call_command("bootstrap_superuser")
+
+        self.assertFalse(get_user_model().objects.exists())
+
+    def test_bootstrap_creates_superuser_once_without_logging_password(self):
+        password = "temporary-secret-for-test-only"
+        environment = {
+            "DJANGO_SUPERUSER_USERNAME": "site-admin",
+            "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
+            "DJANGO_SUPERUSER_PASSWORD": password,
+        }
+        output = StringIO()
+
+        with patch.dict(os.environ, environment):
+            call_command("bootstrap_superuser", stdout=output)
+            call_command("bootstrap_superuser", stdout=output)
+
+        user = get_user_model().objects.get(username="site-admin")
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.check_password(password))
+        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertNotIn(password, output.getvalue())
+
+    def test_bootstrap_rejects_existing_non_superuser(self):
+        get_user_model().objects.create_user(
+            username="site-admin",
+            email="admin@example.com",
+            password="existing-password",
+        )
+        with patch.dict(
+            os.environ,
+            {
+                "DJANGO_SUPERUSER_USERNAME": "site-admin",
+                "DJANGO_SUPERUSER_EMAIL": "admin@example.com",
+                "DJANGO_SUPERUSER_PASSWORD": "temporary-secret-for-test-only",
+            },
+        ):
+            with self.assertRaisesMessage(
+                CommandError, "already exists and is not a superuser"
+            ):
+                call_command("bootstrap_superuser")
 
 
 class ApplicationApiTests(APITestCase):

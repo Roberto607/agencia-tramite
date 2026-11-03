@@ -32,3 +32,13 @@ docker compose exec backend python manage.py test
 ```
 
 La configuración es para desarrollo local. Antes de publicar, configura secretos reales, `DEBUG=0`, hosts/CORS del dominio y almacenamiento duradero de archivos.
+
+## Administrador inicial en Render
+
+El contenedor crea el administrador inicial al arrancar si configuras juntas estas variables privadas en el servicio web:
+
+- `DJANGO_SUPERUSER_USERNAME`
+- `DJANGO_SUPERUSER_EMAIL`
+- `DJANGO_SUPERUSER_PASSWORD`
+
+Después de confirmar que puedes iniciar sesión en `/admin/`, elimina estas tres variables de Render. El usuario creado permanece en PostgreSQL; el comando no cambia la contraseña ni los permisos de un superusuario ya existente.
