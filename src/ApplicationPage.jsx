@@ -51,15 +51,16 @@ function ApplicationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRefs = useRef({})
 
-  function addServiceDocuments(service, event) {
+  function addServiceDocuments(service, fileType, event) {
     const selectedFiles = Array.from(event.currentTarget.files ?? [])
     setServiceDocuments((current) => ({
       ...current,
       [service]: [
         ...(current[service] ?? []),
-        ...selectedFiles.map((file) => ({ id: crypto.randomUUID(), file })),
+        ...selectedFiles.map((file) => ({ id: crypto.randomUUID(), file, fileType })),
       ],
     }))
+    setSelectedServices((current) => current.includes(service) ? current : [...current, service])
     event.currentTarget.value = ''
     setSubmissionError('')
   }
@@ -69,6 +70,20 @@ function ApplicationForm() {
       ...current,
       [service]: (current[service] ?? []).filter((document) => document.id !== id),
     }))
+  }
+
+  function toggleService(service, isSelected) {
+    setSelectedServices((current) => isSelected
+      ? [...current, service]
+      : current.filter((selectedService) => selectedService !== service))
+    if (!isSelected) {
+      setServiceDocuments((current) => {
+        const remainingDocuments = { ...current }
+        delete remainingDocuments[service]
+        return remainingDocuments
+      })
+    }
+    setSubmissionError('')
   }
 
   async function getApiResult(response) {
@@ -289,23 +304,88 @@ function ApplicationForm() {
                 <legend>Selecciona los trámites que necesitas <span className="required-mark">*</span></legend>
                 <p className="service-selection__hint">Puedes marcar más de uno.</p>
                 <div className="service-selection__options">
-                  {serviceCatalog.map(({ value, label }) => (
-                    <label className="service-option" key={value}>
-                      <input
-                        checked={selectedServices.includes(value)}
-                        name="service_options"
-                        onChange={(event) => {
-                          setSelectedServices((current) => event.target.checked
-                            ? [...current, value]
-                            : current.filter((service) => service !== value))
-                          setSubmissionError('')
-                        }}
-                        type="checkbox"
-                        value={value}
-                      />
-                      <span>{label}</span>
-                    </label>
-                  ))}
+                  {serviceCatalog.map(({ value, label }) => {
+                    const isSelected = selectedServices.includes(value)
+                    const documents = serviceDocuments[value] ?? []
+                    const photoInputKey = `${value}-photo`
+                    const documentInputKey = `${value}-document`
+
+                    return (
+                      <div className={`service-option${isSelected ? ' service-option--selected' : ''}`} key={value}>
+                        <div className="service-option__row">
+                          <label className="service-option__choice">
+                            <input
+                              checked={isSelected}
+                              name="service_options"
+                              onChange={(event) => toggleService(value, event.target.checked)}
+                              type="checkbox"
+                              value={value}
+                            />
+                            <span>{label}</span>
+                          </label>
+                          <div className="service-option__uploads">
+                            <input
+                              accept="image/*"
+                              aria-label={`Foto para ${label}`}
+                              className="visually-hidden"
+                              multiple
+                              onChange={(event) => addServiceDocuments(value, 'photo', event)}
+                              ref={(element) => { fileInputRefs.current[photoInputKey] = element }}
+                              type="file"
+                            />
+                            <button
+                              aria-label={`Añadir foto para ${label}`}
+                              className="service-upload-button"
+                              onClick={() => fileInputRefs.current[photoInputKey]?.click()}
+                              title="Añadir foto"
+                              type="button"
+                            >
+                              <ImagePlus size={17} aria-hidden="true" />
+                            </button>
+                            <input
+                              accept=".pdf,.doc,.docx,.odt,.rtf,.txt"
+                              aria-label={`Documento para ${label}`}
+                              className="visually-hidden"
+                              multiple
+                              onChange={(event) => addServiceDocuments(value, 'document', event)}
+                              ref={(element) => { fileInputRefs.current[documentInputKey] = element }}
+                              type="file"
+                            />
+                            <button
+                              aria-label={`Añadir documento para ${label}`}
+                              className="service-upload-button"
+                              onClick={() => fileInputRefs.current[documentInputKey]?.click()}
+                              title="Añadir documento"
+                              type="button"
+                            >
+                              <FilePlus2 size={17} aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                        {documents.length > 0 && (
+                          <ul className="service-option__files" aria-label={`Archivos para ${label}`}>
+                            {documents.map(({ id, file, fileType }) => (
+                              <li className="document-item" key={id}>
+                                {fileType === 'photo'
+                                  ? <ImagePlus size={17} aria-hidden="true" />
+                                  : <FileText size={17} aria-hidden="true" />}
+                                <span className="document-item__name">{file.name}</span>
+                                <span className="document-item__size">{formatFileSize(file.size)}</span>
+                                <button
+                                  aria-label={`Quitar ${file.name}`}
+                                  className="remove-file-button"
+                                  onClick={() => removeServiceDocument(value, id)}
+                                  type="button"
+                                >
+                                  <Trash2 size={17} aria-hidden="true" />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               </fieldset>
 
@@ -321,54 +401,6 @@ function ApplicationForm() {
                 </label>
               )}
 
-              {selectedServices.map((service) => {
-                const label = serviceCatalog.find((item) => item.value === service)?.label ?? service
-                const documents = serviceDocuments[service] ?? []
-                return (
-                  <div className="form-field form-field--full service-documents" key={service}>
-                    <span>Documentos para: {label} <span className="field-hint">Opcional</span></span>
-                    <input
-                      accept="image/*,.pdf,.doc,.docx"
-                      className="visually-hidden"
-                      multiple
-                      onChange={(event) => addServiceDocuments(service, event)}
-                      ref={(element) => { fileInputRefs.current[service] = element }}
-                      type="file"
-                    />
-                    <div className="documents-upload">
-                      <div className="documents-upload__intro">
-                        <div className="documents-upload__icon"><FilePlus2 size={21} aria-hidden="true" /></div>
-                        <div className="upload-copy">
-                          <strong>Adjunta fotos o documentos</strong>
-                          <span>Puedes seleccionar varios archivos para este trámite.</span>
-                        </div>
-                        <button className="secondary-button" onClick={() => fileInputRefs.current[service]?.click()} type="button">
-                          <ImagePlus size={16} aria-hidden="true" /> Agregar archivos
-                        </button>
-                      </div>
-                      {documents.length > 0 && (
-                        <ul className="document-list" aria-label={`Archivos para ${label}`}>
-                          {documents.map(({ id, file }) => (
-                            <li className="document-item" key={id}>
-                              <FileText size={18} aria-hidden="true" />
-                              <span className="document-item__name">{file.name}</span>
-                              <span className="document-item__size">{formatFileSize(file.size)}</span>
-                              <button
-                                aria-label={`Quitar ${file.name}`}
-                                className="remove-file-button"
-                                onClick={() => removeServiceDocument(service, id)}
-                                type="button"
-                              >
-                                <Trash2 size={17} aria-hidden="true" />
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  </div>
-                )
-              })}
             </div>
 
             <div className="form-actions">
