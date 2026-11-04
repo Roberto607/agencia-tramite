@@ -17,9 +17,10 @@ class ServiceType(models.TextChoices):
     DEATH_CERTIFICATE = "certificacion_defuncion", "Certificación de defunción"
     STUDY_CERTIFICATE = "titulos_estudio_certificacion_notas_plan_tematico", "Títulos de estudio, certificación de notas y plan temático"
     LEGAL_REPRESENTATION = "representacion_juridica", "Representación jurídica (abogados)"
-    OTHER = "otros", "Otros"
     CERTIFIED_TRANSLATIONS = "traducciones_certificadas", "Traducciones certificadas"
     APOSTILLE_CONSULATE = "apostillamiento_consulado", "Apostillamiento Consulado"
+    BUSINESS_ADVISORY = "asesoramiento_empresarial", "Asesoramiento empresarial: Pymes, TCP, CNA y otros actores económicos"
+    OTHER = "otros", "Otros"
 
 
 class Application(models.Model):

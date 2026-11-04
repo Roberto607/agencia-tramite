@@ -54,9 +54,10 @@ const serviceCatalog = [
   { value: 'certificacion_defuncion', label: 'Certificación de defunción' },
   { value: 'titulos_estudio_certificacion_notas_plan_tematico', label: 'Títulos de estudio, certificación de notas y plan temático' },
   { value: 'representacion_juridica', label: 'Representación jurídica (abogados)' },
-  { value: 'otros', label: 'Otros' },
   { value: 'traducciones_certificadas', label: 'Traducciones certificadas' },
   { value: 'apostillamiento_consulado', label: 'Apostillamiento Consulado' },
+  { value: 'asesoramiento_empresarial', label: 'Asesoramiento empresarial: Pymes, TCP, CNA y otros actores económicos' },
+  { value: 'otros', label: 'Otros' },
 ]
 
 function Hero() {

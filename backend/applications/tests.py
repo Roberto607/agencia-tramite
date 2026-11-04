@@ -352,6 +352,7 @@ class ApplicationApiTests(APITestCase):
             selected_services=[
                 "apostillamiento_consulado",
                 "traducciones_certificadas",
+                "asesoramiento_empresarial",
             ],
         )
         Application.objects.create(
@@ -380,6 +381,10 @@ class ApplicationApiTests(APITestCase):
             reverse("admin:applications_application_changelist"),
             {"q": "Traducciones certificadas"},
         )
+        advisory_suggestions = self.client.get(
+            reverse("admin:applications_application_search_suggestions"),
+            {"q": "Asesoramiento empresarial Pymes"},
+        )
 
         self.assertEqual(nit_suggestions.status_code, status.HTTP_200_OK)
         self.assertEqual(
@@ -395,7 +400,13 @@ class ApplicationApiTests(APITestCase):
         )
         self.assertContains(
             service_list,
-            "Apostillamiento Consulado, Traducciones certificadas",
+            "Apostillamiento Consulado, Traducciones certificadas, "
+            "Asesoramiento empresarial: Pymes, TCP, CNA y otros actores económicos",
+        )
+        self.assertEqual(advisory_suggestions.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            [result["id"] for result in advisory_suggestions.json()["results"]],
+            [nit_application.pk],
         )
 
     def test_txt_export_contains_only_selected_application_without_attachments(self):
