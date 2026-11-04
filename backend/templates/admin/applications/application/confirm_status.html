@@ -1,0 +1,31 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <div id="content-main">
+    <h1>{{ title }}</h1>
+    <div class="module">
+      <p>
+        Confirma el cambio de estado de la solicitud
+        <strong>#{{ application.pk }}</strong> de
+        <strong>{{ application.first_names }} {{ application.last_names }}</strong>.
+      </p>
+      <dl>
+        <dt>Estado nuevo</dt>
+        <dd>{{ status_label }}</dd>
+        <dt>Teléfono</dt>
+        <dd>{{ application.phone|default:"No registrado" }}</dd>
+        <dt>Trámites</dt>
+        <dd>{{ service_types }}</dd>
+      </dl>
+      <p>Se abrirá WhatsApp con este mensaje para que lo revises y lo envíes:</p>
+      <blockquote>{{ message }}</blockquote>
+      <form method="post">
+        {% csrf_token %}
+        <div class="submit-row">
+          <input class="default" type="submit" value="Confirmar y abrir WhatsApp">
+          <a href="{% url 'admin:applications_application_changelist' %}">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -2,6 +2,7 @@ import os
 from io import StringIO
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlsplit
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -11,7 +12,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Application, ApplicationDocument
+from .models import Application, ApplicationDocument, ApplicationStatus
 
 
 class BootstrapSuperuserTests(APITestCase):
@@ -365,6 +366,8 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(inbox, "Ana María Pérez López")
         self.assertContains(inbox, "ana@example.com")
         self.assertContains(inbox, "Descargar TXT")
+        self.assertContains(inbox, "Aprobar")
+        self.assertContains(inbox, "Rechazar")
         self.assertContains(inbox, 'class="application-search"', html=False)
         self.assertContains(inbox, 'id="application-search-suggestions"', html=False)
         self.assertContains(inbox, "form.requestSubmit();", html=False)
@@ -390,6 +393,83 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(photo_download.status_code, status.HTTP_200_OK)
         self.assertEqual(b"".join(photo_download.streaming_content), b"private photo")
         self.assertEqual(str(photo), "nacimiento.jpg")
+
+    def test_admin_can_approve_or_reject_and_open_whatsapp_with_a_message(self):
+        admin_user = get_user_model().objects.create_superuser(
+            "review-admin",
+            "review-admin@example.com",
+            "review-admin-password-for-test",
+        )
+        application = Application.objects.create(
+            first_names="Ana María",
+            last_names="Pérez",
+            identification_type="cedula",
+            identification_number="123456789",
+            email="ana@example.com",
+            phone="+53 58049659",
+            selected_services=["certificacion_nacimiento"],
+        )
+        self.client.force_login(admin_user)
+
+        approve_url = reverse(
+            "admin:applications_application_review_status",
+            args=(application.pk, ApplicationStatus.APPROVED),
+        )
+        confirmation = self.client.get(approve_url)
+        self.assertEqual(confirmation.status_code, status.HTTP_200_OK)
+        self.assertContains(confirmation, "Confirmar y abrir WhatsApp")
+        self.assertContains(confirmation, "Certificación de Nacimiento")
+
+        approved = self.client.post(approve_url)
+        application.refresh_from_db()
+        self.assertEqual(application.status, ApplicationStatus.APPROVED)
+        self.assertEqual(approved.status_code, status.HTTP_302_FOUND)
+        self.assertTrue(approved.headers["Location"].startswith("https://wa.me/5358049659?text="))
+        approve_message = parse_qs(urlsplit(approved.headers["Location"]).query)["text"][0]
+        self.assertIn("fue aprobada", approve_message)
+        self.assertIn("Ana María", approve_message)
+
+        reject_url = reverse(
+            "admin:applications_application_review_status",
+            args=(application.pk, ApplicationStatus.REJECTED),
+        )
+        rejected = self.client.post(reject_url)
+        application.refresh_from_db()
+        self.assertEqual(application.status, ApplicationStatus.REJECTED)
+        self.assertTrue(rejected.headers["Location"].startswith("https://wa.me/5358049659?text="))
+        reject_message = parse_qs(urlsplit(rejected.headers["Location"]).query)["text"][0]
+        self.assertIn("no fue aprobada", reject_message)
+
+    def test_admin_review_does_not_change_status_without_a_valid_phone(self):
+        admin_user = get_user_model().objects.create_superuser(
+            "review-no-phone-admin",
+            "review-no-phone@example.com",
+            "review-no-phone-password-for-test",
+        )
+        application = Application.objects.create(
+            first_names="Luis",
+            last_names="Pérez",
+            identification_type="cedula",
+            identification_number="123456789",
+            email="luis@example.com",
+            phone="555",
+        )
+        self.client.force_login(admin_user)
+        review_url = reverse(
+            "admin:applications_application_review_status",
+            args=(application.pk, ApplicationStatus.APPROVED),
+        )
+
+        response = self.client.post(review_url)
+        application.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertEqual(application.status, ApplicationStatus.PENDING)
+        self.assertEqual(
+            response.headers["Location"],
+            reverse("admin:applications_application_changelist"),
+        )
+        inbox = self.client.get(response.headers["Location"])
+        self.assertContains(inbox, "el teléfono del solicitante")
 
     def test_admin_list_collapses_additional_services_behind_ellipsis(self):
         admin_user = get_user_model().objects.create_superuser(

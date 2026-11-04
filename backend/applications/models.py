@@ -29,6 +29,12 @@ class ApplicationFileType(models.TextChoices):
     DOCUMENT = "document", "Documento"
 
 
+class ApplicationStatus(models.TextChoices):
+    PENDING = "pending", "Pendiente"
+    APPROVED = "approved", "Aprobada"
+    REJECTED = "rejected", "Rechazada"
+
+
 class Application(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -47,6 +53,11 @@ class Application(models.Model):
     selected_services = models.JSONField(default=list)
     other_service = models.CharField(max_length=255, blank=True, default="")
     photo = models.ImageField(upload_to="applications/photos/%Y/%m/", blank=True, null=True)
+    status = models.CharField(
+        max_length=12,
+        choices=ApplicationStatus.choices,
+        default=ApplicationStatus.PENDING,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

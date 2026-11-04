@@ -1,3 +1,5 @@
+import re
+from urllib.parse import urlencode
 from pathlib import Path
 
 from django.contrib import admin
@@ -5,14 +7,29 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q, TextField
 from django.db.models.functions import Cast
-from django.http import FileResponse, Http404, HttpResponse, JsonResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    HttpResponseNotAllowed,
+    HttpResponseRedirect,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404
+from django.contrib import messages
+from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils.dateparse import parse_date
 from django.utils.html import format_html, format_html_join
 from django.utils import timezone
 
-from .models import Application, ApplicationDocument, IdentificationType, ServiceType
+from .models import (
+    Application,
+    ApplicationDocument,
+    ApplicationStatus,
+    IdentificationType,
+    ServiceType,
+)
 
 
 class ApplicationDocumentInline(admin.TabularInline):
@@ -60,6 +77,8 @@ class ApplicationAdmin(admin.ModelAdmin):
         "email",
         "phone",
         "service_types_summary",
+        "status_display",
+        "review_actions",
         "document_count",
         "txt_download_link",
         "created_at",
@@ -74,12 +93,19 @@ class ApplicationAdmin(admin.ModelAdmin):
         ("Datos del solicitante", {"fields": ("first_names", "last_names", "identification_type", "identification_number")}),
         ("Contacto", {"fields": ("email", "phone")}),
         ("Trámite", {"fields": ("service_types_display", "other_service")}),
+        ("Estado de la solicitud", {"fields": ("status_display",)}),
         ("Registro", {"fields": ("created_at",)}),
     )
-    readonly_fields = ("service_types_display", "created_at")
+    readonly_fields = ("service_types_display", "status_display", "created_at")
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(document_total=Count("documents", distinct=True))
+
+    def get_list_display(self, request):
+        list_display = super().get_list_display(request)
+        if not self.has_change_permission(request):
+            return tuple(field for field in list_display if field != "review_actions")
+        return list_display
 
     @admin.display(description="Solicitante")
     def full_name(self, application):
@@ -117,6 +143,42 @@ class ApplicationAdmin(admin.ModelAdmin):
             additional_services,
         )
 
+    @admin.display(description="Estado")
+    def status_display(self, application):
+        return application.get_status_display()
+
+    @admin.display(description="Revisar solicitud")
+    def review_actions(self, application):
+        approve_url = reverse(
+            "admin:applications_application_review_status",
+            args=(application.pk, ApplicationStatus.APPROVED),
+        )
+        reject_url = reverse(
+            "admin:applications_application_review_status",
+            args=(application.pk, ApplicationStatus.REJECTED),
+        )
+        return format_html(
+            '<span class="review-actions">'
+            '<a class="review-action review-action--approve" href="{}">Aprobar</a>'
+            '<a class="review-action review-action--reject" href="{}">Rechazar</a>'
+            "</span>",
+            approve_url,
+            reject_url,
+        )
+
+    def _review_message(self, application, target_status):
+        action_text = (
+            "fue aprobada"
+            if target_status == ApplicationStatus.APPROVED
+            else "no fue aprobada"
+        )
+        return (
+            f"Hola {application.first_names}, te contactamos sobre tu solicitud "
+            f"#{application.pk} para {self.service_types_display(application)}. "
+            f"Tu solicitud {action_text}. Por favor, responde este mensaje "
+            "para conversar sobre los siguientes pasos."
+        )
+
     @admin.display(description="Exportar")
     def txt_download_link(self, application):
         url = reverse(
@@ -144,6 +206,11 @@ class ApplicationAdmin(admin.ModelAdmin):
                 name="applications_application_search_suggestions",
             ),
             path(
+                "<int:object_id>/review/<str:target_status>/",
+                self.admin_site.admin_view(self.review_status),
+                name="applications_application_review_status",
+            ),
+            path(
                 "<int:object_id>/export-txt/",
                 self.admin_site.admin_view(self.export_txt),
                 name="applications_application_export_txt",
@@ -160,6 +227,55 @@ class ApplicationAdmin(admin.ModelAdmin):
             ),
         ]
         return custom_urls + super().get_urls()
+
+    def review_status(self, request, object_id, target_status):
+        application = get_object_or_404(Application, pk=object_id)
+        if not self.has_change_permission(request, application):
+            raise PermissionDenied
+        if target_status not in {
+            ApplicationStatus.APPROVED,
+            ApplicationStatus.REJECTED,
+        }:
+            raise Http404
+
+        status_label = dict(ApplicationStatus.choices)[target_status]
+        if request.method == "POST":
+            phone_digits = re.sub(r"\D", "", application.phone)
+            if phone_digits.startswith("00"):
+                phone_digits = phone_digits[2:]
+            if not 8 <= len(phone_digits) <= 15:
+                messages.error(
+                    request,
+                    "No se pudo notificar: el teléfono del solicitante no parece tener un código de país válido.",
+                )
+                return HttpResponseRedirect(
+                    reverse("admin:applications_application_changelist")
+                )
+
+            application.status = target_status
+            application.save(update_fields=("status",))
+            message = self._review_message(application, target_status)
+            return HttpResponseRedirect(
+                f"https://wa.me/{phone_digits}?{urlencode({'text': message})}"
+            )
+
+        if request.method != "GET":
+            return HttpResponseNotAllowed(("GET", "POST"))
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": f"Confirmar solicitud {status_label.lower()}",
+            "application": application,
+            "target_status": target_status,
+            "status_label": status_label,
+            "service_types": self.service_types_display(application),
+            "message": self._review_message(application, target_status),
+        }
+        return TemplateResponse(
+            request,
+            "admin/applications/application/confirm_status.html",
+            context,
+        )
 
     def search_suggestions(self, request):
         if not self.has_view_or_change_permission(request):
