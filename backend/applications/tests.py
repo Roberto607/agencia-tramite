@@ -12,7 +12,12 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .models import Application, ApplicationDocument, ApplicationStatus
+from .models import (
+    Application,
+    ApplicationDocument,
+    ApplicationNotification,
+    ApplicationStatus,
+)
 
 
 class BootstrapSuperuserTests(APITestCase):
@@ -446,6 +451,18 @@ class ApplicationApiTests(APITestCase):
         reject_message = parse_qs(urlsplit(rejected.headers["Location"]).query)["text"][0]
         self.assertIn("no fue aprobada", reject_message)
 
+        notifications = self.client.get(
+            reverse("admin:applications_applicationnotification_changelist")
+        )
+        self.assertEqual(
+            ApplicationNotification.objects.filter(application=application).count(),
+            2,
+        )
+        self.assertContains(notifications, "Aprobada")
+        self.assertContains(notifications, "Rechazada")
+        self.assertContains(notifications, "Preparada para WhatsApp")
+        self.assertContains(notifications, "Ana María Pérez")
+
     def test_admin_review_does_not_change_status_without_a_valid_phone(self):
         admin_user = get_user_model().objects.create_superuser(
             "review-no-phone-admin",
@@ -470,6 +487,7 @@ class ApplicationApiTests(APITestCase):
         application.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertEqual(application.status, ApplicationStatus.PENDING)
+        self.assertFalse(ApplicationNotification.objects.exists())
         self.assertEqual(
             response.headers["Location"],
             reverse("admin:applications_application_changelist"),

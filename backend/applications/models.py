@@ -94,6 +94,40 @@ class ApplicationDocument(models.Model):
         return self.file.name.rsplit("/", 1)[-1]
 
 
+class ApplicationNotification(models.Model):
+    application = models.ForeignKey(
+        Application,
+        on_delete=models.SET_NULL,
+        related_name="notifications",
+        blank=True,
+        null=True,
+    )
+    application_reference = models.CharField(max_length=32)
+    applicant_name = models.CharField(max_length=241)
+    phone = models.CharField(max_length=40)
+    status = models.CharField(max_length=12, choices=(
+        (ApplicationStatus.APPROVED, "Aprobada"),
+        (ApplicationStatus.REJECTED, "Rechazada"),
+    ))
+    message = models.TextField()
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="application_notifications",
+        blank=True,
+        null=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+        verbose_name = "notificación de solicitud"
+        verbose_name_plural = "Solicitudes"
+
+    def __str__(self):
+        return f"{self.application_reference} · {self.get_status_display()}"
+
+
 class ClientProfile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

@@ -5,6 +5,7 @@ from pathlib import Path
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Count, Q, TextField
 from django.db.models.functions import Cast
 from django.http import (
@@ -26,6 +27,7 @@ from django.utils import timezone
 from .models import (
     Application,
     ApplicationDocument,
+    ApplicationNotification,
     ApplicationStatus,
     IdentificationType,
     ServiceType,
@@ -238,9 +240,19 @@ class ApplicationAdmin(admin.ModelAdmin):
                     reverse("admin:applications_application_changelist")
                 )
 
-            application.status = target_status
-            application.save(update_fields=("status",))
             message = self._review_message(application, target_status)
+            with transaction.atomic():
+                application.status = target_status
+                application.save(update_fields=("status",))
+                ApplicationNotification.objects.create(
+                    application=application,
+                    application_reference=f"Solicitud #{application.pk}",
+                    applicant_name=f"{application.first_names} {application.last_names}",
+                    phone=application.phone,
+                    status=target_status,
+                    message=message,
+                    created_by=request.user,
+                )
             return HttpResponseRedirect(
                 f"https://wa.me/{phone_digits}?{urlencode({'text': message})}"
             )
@@ -394,6 +406,64 @@ class ApplicationAdmin(admin.ModelAdmin):
             as_attachment=True,
             filename=Path(document.file.name).name,
         )
+
+
+@admin.register(ApplicationNotification)
+class ApplicationNotificationAdmin(admin.ModelAdmin):
+    list_display = (
+        "application_link",
+        "applicant_name",
+        "status_display",
+        "notification_state",
+        "phone",
+        "created_by",
+        "created_at",
+    )
+    list_display_links = None
+    list_filter = ("status", "created_at")
+    search_fields = (
+        "application_reference",
+        "applicant_name",
+        "phone",
+        "application__identification_number",
+    )
+    ordering = ("-created_at", "-pk")
+    readonly_fields = (
+        "application_link",
+        "application_reference",
+        "applicant_name",
+        "phone",
+        "status_display",
+        "notification_state",
+        "message",
+        "created_by",
+        "created_at",
+    )
+    fields = readonly_fields
+
+    @admin.display(description="Solicitud")
+    def application_link(self, notification):
+        if notification.application_id:
+            url = reverse(
+                "admin:applications_application_change",
+                args=(notification.application_id,),
+            )
+            return format_html('<a href="{}">{}</a>', url, notification.application_reference)
+        return notification.application_reference
+
+    @admin.display(description="Resultado")
+    def status_display(self, notification):
+        return notification.get_status_display()
+
+    @admin.display(description="Notificación")
+    def notification_state(self, notification):
+        return "Preparada para WhatsApp"
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 admin.site.site_header = "LB&A Consulter"
