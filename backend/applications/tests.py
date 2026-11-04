@@ -465,6 +465,10 @@ class ApplicationApiTests(APITestCase):
             notification_search_url,
             {"q": "rechazada"},
         )
+        approved_notifications = self.client.get(
+            notification_search_url,
+            {"q": "aPrObAdA"},
+        )
         self.assertEqual(
             ApplicationNotification.objects.filter(application=application).count(),
             2,
@@ -472,7 +476,15 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(matching_notifications.status_code, status.HTTP_200_OK)
         self.assertEqual(matching_notifications.context["cl"].result_count, 2)
         self.assertEqual(rejected_notifications.context["cl"].result_count, 1)
+        self.assertEqual(approved_notifications.context["cl"].result_count, 1)
         self.assertContains(rejected_notifications, "Rechazada")
+        self.assertEqual(
+            [
+                notification.status
+                for notification in approved_notifications.context["cl"].result_list
+            ],
+            [ApplicationStatus.APPROVED],
+        )
         self.assertContains(notifications, "Aprobada")
         self.assertContains(notifications, "Rechazada")
         self.assertContains(notifications, "Preparada para WhatsApp")

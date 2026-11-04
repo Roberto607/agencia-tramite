@@ -463,19 +463,20 @@ class ApplicationNotificationAdmin(admin.ModelAdmin):
 
     def get_search_results(self, request, queryset, search_term):
         for term in search_term.split():
+            matching_statuses = ApplicationAdmin._choice_values_matching(
+                ApplicationStatus.choices,
+                term,
+            )
+            if matching_statuses:
+                queryset = queryset.filter(status__in=matching_statuses)
+                continue
+
             matching_term = Q(application_reference__icontains=term)
             matching_term |= Q(applicant_name__icontains=term)
             matching_term |= Q(phone__icontains=term)
             matching_term |= Q(message__icontains=term)
             matching_term |= Q(application__identification_number__icontains=term)
             matching_term |= Q(created_by__username__icontains=term)
-
-            matching_statuses = ApplicationAdmin._choice_values_matching(
-                ApplicationStatus.choices,
-                term,
-            )
-            if matching_statuses:
-                matching_term |= Q(status__in=matching_statuses)
             queryset = queryset.filter(matching_term)
         return queryset, False
 
