@@ -80,7 +80,7 @@ class ApplicationDocument(models.Model):
         verbose_name_plural = "archivos adjuntos"
 
     def __str__(self):
-        return self.file.name
+        return self.file.name.rsplit("/", 1)[-1]
 
 
 class ClientProfile(models.Model):

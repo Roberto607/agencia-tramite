@@ -13,6 +13,9 @@ import {
   ShieldCheck,
   Zap,
   Youtube,
+  UserRound,
+  Globe2,
+  ClipboardCheck,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import ApplicationPage from './ApplicationPage'
@@ -41,6 +44,24 @@ const benefits = [
   },
 ]
 
+const serviceHighlights = [
+  {
+    title: 'Atención personalizada',
+    description: 'Te orientamos según tu caso y resolvemos tus dudas durante el proceso.',
+    Icon: UserRound,
+  },
+  {
+    title: 'Trámites en línea',
+    description: 'Envía tu solicitud y los documentos necesarios desde donde estés.',
+    Icon: Globe2,
+  },
+  {
+    title: 'Seguimiento de tu consulta',
+    description: 'Nuestro equipo analiza tu solicitud y te mantiene al tanto.',
+    Icon: ClipboardCheck,
+  },
+]
+
 
 function Hero() {
   return (
@@ -53,19 +74,39 @@ function Hero() {
             Tu gestión, más fácil y rápido
           </div>
           <h1 id="hero-title">LB&amp;A Consulter<br /><span>Agencia de trámites y consultoría</span></h1>
-          <p>
-            Te acompañamos en tus gestiones personales y empresariales con orientación cercana y un proceso sencillo.
-            Realiza tu solicitud en línea, desde donde estés.
-          </p>
-          <div className="hero__highlights">
-            <span>Atención personalizada</span>
-            <span>Trámites en línea</span>
-            <span>Seguimiento de tu consulta</span>
-          </div>
           <a className="primary-button hero__action" href="/#/solicitud">
             Regístrate o inicia sesión <ArrowRight size={18} aria-hidden="true" />
           </a>
           <span className="hero__note">Crea tu cuenta para iniciar y consultar tu solicitud.</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ServiceHighlights() {
+  return (
+    <section className="service-highlights" aria-labelledby="service-highlights-title">
+      <div className="service-highlights__inner">
+        <div className="service-highlights__intro">
+          <span className="service-highlights__eyebrow">Estamos contigo</span>
+          <h2 id="service-highlights-title">Tus gestiones, con acompañamiento de principio a fin</h2>
+          <p>
+            Te acompañamos en tus gestiones personales y empresariales con orientación cercana y un proceso sencillo.
+            Realiza tu solicitud en línea, desde donde estés.
+          </p>
+        </div>
+        <div className="service-highlights__grid">
+          {serviceHighlights.map(({ title, description, Icon }, index) => (
+            <article className="service-highlight-card" key={title}>
+              <span className="service-highlight-card__number">0{index + 1}</span>
+              <div className="service-highlight-card__icon">
+                <Icon size={25} strokeWidth={2.2} aria-hidden="true" />
+              </div>
+              <h3>{title}</h3>
+              <p>{description}</p>
+            </article>
+          ))}
         </div>
       </div>
     </section>
@@ -162,6 +203,7 @@ export default function App() {
     <>
       <main>
         <Hero />
+        <ServiceHighlights />
         <Benefits />
         <PhoneContact />
         <section className="anchor-target" id="preguntas" aria-label="Preguntas frecuentes" />

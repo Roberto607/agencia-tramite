@@ -74,10 +74,9 @@ class ApplicationAdmin(admin.ModelAdmin):
         ("Datos del solicitante", {"fields": ("first_names", "last_names", "identification_type", "identification_number")}),
         ("Contacto", {"fields": ("email", "phone")}),
         ("Trámite", {"fields": ("service_types_display", "other_service")}),
-        ("Fotografía", {"fields": ("photo_name", "photo_download")}),
         ("Registro", {"fields": ("created_at",)}),
     )
-    readonly_fields = ("service_types_display", "photo_name", "photo_download", "created_at")
+    readonly_fields = ("service_types_display", "created_at")
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(document_total=Count("documents", distinct=True))

@@ -383,10 +383,13 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(detail, "nacimiento.jpg")
         self.assertContains(detail, "Fotografía")
         self.assertContains(detail, "Certificación de Nacimiento")
+        self.assertNotContains(detail, "applications/documents/")
+        self.assertNotContains(detail, "<h2>Fotografía</h2>", html=False)
         self.assertEqual(download.status_code, status.HTTP_200_OK)
         self.assertEqual(b"".join(download.streaming_content), b"private document")
         self.assertEqual(photo_download.status_code, status.HTTP_200_OK)
         self.assertEqual(b"".join(photo_download.streaming_content), b"private photo")
+        self.assertEqual(str(photo), "nacimiento.jpg")
 
     def test_admin_list_collapses_additional_services_behind_ellipsis(self):
         admin_user = get_user_model().objects.create_superuser(
