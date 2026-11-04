@@ -43,6 +43,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .hero__content > p { margin: 16px 0 23px; max-width: 610px; font-size: 19px; line-height: 1.5; font-weight: 400; }
 .primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 11px; min-height: 49px; padding: 0 25px; border-radius: 999px; background: var(--blue); color: #fff; font-size: 15px; font-weight: 700; transition: background 160ms ease, transform 160ms ease; }
 .primary-button:hover { background: #2874f4; transform: translateY(-2px); }
+.hero__action { border: 1px solid rgba(255, 255, 255, .65); cursor: pointer; }
 
 .benefits { background: #fff; animation: section-enter 650ms cubic-bezier(.2, .7, .2, 1) 100ms both; }
 .benefits-inner { width: min(100% - 64px, 1440px); min-height: 162px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center; }
@@ -57,19 +58,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .benefit:nth-child(2) .benefit__icon svg { fill: currentColor; color: #103d80; stroke: #fff; }
 .benefit__copy h2 { margin: 0 0 7px; color: #0c2851; font-size: 15px; line-height: 1.2; font-weight: 800; }
 .benefit__copy p { max-width: 205px; margin: 0; color: #223b61; font-size: 13px; line-height: 1.45; }
-.service-catalog { padding: 54px 0 22px; background: linear-gradient(180deg, #f7faff 0%, #edf4ff 100%); }
-.service-catalog__header { width: min(100% - 64px, 1440px); margin: 0 auto 24px; }
-.service-catalog__header h2 { margin: 10px 0 0; color: #0c2851; font-size: clamp(26px, 2.4vw, 38px); line-height: 1.15; font-weight: 800; }
-.service-catalog__grid { width: min(100% - 64px, 1440px); margin: 0 auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-.service-item { padding: 18px 20px; border: 1px solid #d5e1f5; border-radius: 10px; background: rgba(255, 255, 255, .8); box-shadow: 0 8px 22px rgba(20, 48, 91, .04); }
-.service-item__tag { display: inline-block; padding: 6px 9px; margin-bottom: 12px; border-radius: 999px; background: #e6f1ff; color: #175bc2; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.service-item h3 { margin: 0; color: #17345a; font-size: 15px; line-height: 1.5; font-weight: 700; }
+
 .application-section { padding: 66px 0 76px; background: #f3f7fc; scroll-margin-top: 16px; animation: section-enter 650ms cubic-bezier(.2, .7, .2, 1) 180ms both; }
 .application-inner { width: min(100% - 48px, 980px); margin: 0 auto; }
 .application-heading { margin: 0 0 25px; }
 .application-eyebrow { color: #1260df; font-size: 12px; font-weight: 800; text-transform: uppercase; }
 .application-heading h2 { margin: 7px 0 8px; color: #0c2851; font-size: 32px; line-height: 1.15; font-weight: 800; }
 .application-heading p { margin: 0; color: #536780; font-size: 15px; }
+.auth-switch { margin: 20px 0 0; color: #536780; font-size: 14px; text-align: center; }
+.auth-switch button { padding: 0; border: 0; background: transparent; color: #1260df; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.application-close { margin-top: 20px; padding: 8px 0; border: 0; background: transparent; color: #536780; font: inherit; font-size: 13px; cursor: pointer; }
 .application-form { padding: 34px; border: 1px solid #dce5f1; border-radius: 6px; background: #fff; box-shadow: 0 10px 28px rgba(12, 40, 81, .06); }
 .application-complete { display: flex; align-items: flex-start; gap: 16px; border-color: #bbdfcb; background: #f0faf4; color: #215e3b; }
 .application-complete > svg { flex: 0 0 auto; }
@@ -199,9 +197,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .hero__content > p { max-width: 480px; font-size: 16px; }
   .desktop-break { display: none; }
   .primary-button { min-height: 47px; font-size: 14px; }
-  .service-catalog { padding: 42px 0 20px; }
-  .service-catalog__header, .service-catalog__grid { width: calc(100% - 36px); }
-  .service-catalog__grid { grid-template-columns: 1fr; }
   .application-section { padding: 47px 0 54px; }
   .application-inner { width: calc(100% - 36px); }
   .application-heading h2 { font-size: 28px; }

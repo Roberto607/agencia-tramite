@@ -175,6 +175,48 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(duplicate_response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", duplicate_response.data)
 
+    def test_client_can_log_in_and_receives_profile_and_token(self):
+        registration_data = {
+            "first_names": "Ana María",
+            "last_names": "Pérez López",
+            "identification_type": "cedula",
+            "identification_number": "123456789",
+            "phone": "+53 58049659",
+            "email": "ana@example.com",
+            "password": "V3ry-Strong-Account-Password-892!",
+        }
+        self.client.post(reverse("client-registration"), registration_data, format="json")
+
+        response = self.client.post(
+            reverse("client-login"),
+            {"email": "ANA@example.com", "password": registration_data["password"]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["token"])
+        self.assertEqual(
+            response.data["profile"],
+            {
+                "first_names": "Ana María",
+                "last_names": "Pérez López",
+                "identification_type": "cedula",
+                "identification_number": "123456789",
+                "phone": "+53 58049659",
+                "email": "ana@example.com",
+            },
+        )
+
+    def test_client_login_rejects_invalid_credentials(self):
+        response = self.client.post(
+            reverse("client-login"),
+            {"email": "unknown@example.com", "password": "incorrect"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detail", response.data)
+
     def test_root_redirects_to_admin_login(self):
         response = self.client.get("/")
 

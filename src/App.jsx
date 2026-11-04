@@ -19,7 +19,7 @@ import {
   Zap,
   Youtube,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -60,7 +60,7 @@ const serviceCatalog = [
   { value: 'otros', label: 'Otros' },
 ]
 
-function Hero() {
+function Hero({ onStart }) {
   return (
     <section className="hero" id="inicio" aria-labelledby="hero-title">
       <div className="hero__image" aria-hidden="true" />
@@ -72,6 +72,9 @@ function Hero() {
           </div>
           <h1 id="hero-title">LB&amp;A Consulter<br /><span>Agencia de trámites y consultoría</span></h1>
           <p>Realiza tus trámites de forma ágil, segura y 100% en línea.<br className="desktop-break" /> Ahorra tiempo y evita filas.</p>
+          <button className="primary-button hero__action" onClick={onStart} type="button">
+            Regístrate o inicia sesión <ArrowRight size={18} aria-hidden="true" />
+          </button>
         </div>
       </div>
     </section>
@@ -96,32 +99,15 @@ function Benefits() {
   )
 }
 
-function ServiceCatalog() {
-  return (
-    <section className="service-catalog" aria-labelledby="service-catalog-title">
-      <div className="service-catalog__header">
-        <span className="application-eyebrow">Trámites que realizamos</span>
-        <h2 id="service-catalog-title">Servicios de consultoría y gestión</h2>
-      </div>
-      <div className="service-catalog__grid">
-        {serviceCatalog.map(({ value, label }) => (
-          <article className="service-item" key={value}>
-            <span className="service-item__tag">Trámite</span>
-            <h3>{label}</h3>
-          </article>
-        ))}
-      </div>
-    </section>
-  )
-}
-
 function formatFileSize(bytes) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function ApplicationForm() {
+function ApplicationForm({ sectionRef, onClose }) {
   const [step, setStep] = useState('register')
+  const [authMode, setAuthMode] = useState('register')
+  const [loginCredentials, setLoginCredentials] = useState({ email: '', password: '' })
   const [profile, setProfile] = useState({
     first_names: '',
     last_names: '',
@@ -194,6 +180,27 @@ function ApplicationForm() {
     }
   }
 
+  async function handleLogin(event) {
+    event.preventDefault()
+    setSubmissionError('')
+    setIsSubmitting(true)
+
+    try {
+      const result = await getApiResult(await fetch(`${API_BASE_URL}/api/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginCredentials),
+      }))
+      setAuthToken(result.token)
+      setProfile({ ...result.profile, password: '' })
+      setStep('services')
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : 'No se pudo iniciar sesión.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   async function handleApplicationSubmit(event) {
     event.preventDefault()
     if (selectedServices.length === 0) {
@@ -238,23 +245,27 @@ function ApplicationForm() {
   }
 
   return (
-    <section className="application-section" id="tramites" aria-labelledby="application-title">
+    <section className="application-section" id="tramites" ref={sectionRef} aria-labelledby="application-title">
       <div className="application-inner">
         <div className="application-heading">
           <span className="application-eyebrow">Solicitud en línea</span>
           <h2 id="application-title">
-            {step === 'register' ? 'Regístrate para comenzar' : step === 'services' ? 'Selecciona tus trámites' : 'Solicitud enviada'}
+            {step === 'register'
+              ? authMode === 'register' ? 'Crea tu cuenta' : 'Inicia sesión'
+              : step === 'services' ? 'Selecciona tus trámites' : 'Solicitud enviada'}
           </h2>
           <p>
             {step === 'register'
-              ? 'Crea tu cuenta con tus datos personales.'
+              ? authMode === 'register'
+                ? 'Regístrate para continuar con tu consulta.'
+                : 'Ingresa con el correo y la contraseña de tu cuenta.'
               : step === 'services'
                 ? 'Elige uno o más trámites y adjunta sus documentos.'
                 : 'Ya recibimos tu consulta.'}
           </p>
         </div>
 
-        {step === 'register' && (
+        {step === 'register' && authMode === 'register' && (
           <form className="application-form" onSubmit={handleRegistration} aria-busy={isSubmitting}>
             <div className="form-grid">
               <label className="form-field">
@@ -300,6 +311,47 @@ function ApplicationForm() {
                 {isSubmitting ? 'Creando cuenta...' : 'Registrarme y continuar'} <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
+            <p className="auth-switch">
+              ¿Ya tienes cuenta?{' '}
+              <button onClick={() => { setAuthMode('login'); setSubmissionError('') }} type="button">Inicia sesión</button>
+            </p>
+            {submissionError && <p className="form-notice form-notice--error" role="alert">{submissionError}</p>}
+          </form>
+        )}
+
+        {step === 'register' && authMode === 'login' && (
+          <form className="application-form" onSubmit={handleLogin} aria-busy={isSubmitting}>
+            <div className="form-grid">
+              <label className="form-field form-field--full">
+                <span>Correo electrónico <span className="required-mark">*</span></span>
+                <input
+                  autoComplete="email"
+                  onChange={(event) => setLoginCredentials({ ...loginCredentials, email: event.target.value })}
+                  required
+                  type="email"
+                  value={loginCredentials.email}
+                />
+              </label>
+              <label className="form-field form-field--full">
+                <span>Contraseña <span className="required-mark">*</span></span>
+                <input
+                  autoComplete="current-password"
+                  onChange={(event) => setLoginCredentials({ ...loginCredentials, password: event.target.value })}
+                  required
+                  type="password"
+                  value={loginCredentials.password}
+                />
+              </label>
+            </div>
+            <div className="form-actions">
+              <button className="primary-button" disabled={isSubmitting} type="submit">
+                {isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión y continuar'} <ArrowRight size={18} aria-hidden="true" />
+              </button>
+            </div>
+            <p className="auth-switch">
+              ¿No tienes cuenta?{' '}
+              <button onClick={() => { setAuthMode('register'); setSubmissionError('') }} type="button">Regístrate</button>
+            </p>
             {submissionError && <p className="form-notice form-notice--error" role="alert">{submissionError}</p>}
           </form>
         )}
@@ -415,6 +467,9 @@ function ApplicationForm() {
             </div>
           </div>
         )}
+        {step === 'register' && (
+          <button className="application-close" onClick={onClose} type="button">Cerrar</button>
+        )}
       </div>
     </section>
   )
@@ -471,13 +526,26 @@ function Footer() {
 }
 
 export default function App() {
+  const [applicationOpen, setApplicationOpen] = useState(false)
+  const applicationRef = useRef(null)
+
+  useEffect(() => {
+    if (applicationOpen) {
+      applicationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [applicationOpen])
+
   return (
     <>
       <main>
-        <Hero />
+        <Hero onStart={() => setApplicationOpen(true)} />
         <Benefits />
-        <ServiceCatalog />
-        <ApplicationForm />
+        {applicationOpen && (
+          <ApplicationForm
+            onClose={() => setApplicationOpen(false)}
+            sectionRef={applicationRef}
+          />
+        )}
         <PhoneContact />
         <section className="anchor-target" id="preguntas" aria-label="Preguntas frecuentes" />
       </main>
