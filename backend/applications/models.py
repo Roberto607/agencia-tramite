@@ -30,6 +30,7 @@ class Application(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=40, blank=True)
     service_type = models.CharField(max_length=80, choices=ServiceType.choices, default=ServiceType.APOSTILLE_CONSULATE)
+    selected_services = models.JSONField(default=list)
     other_service = models.CharField(max_length=255, blank=True, default="")
     photo = models.ImageField(upload_to="applications/photos/%Y/%m/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

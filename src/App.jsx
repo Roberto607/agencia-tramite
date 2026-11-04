@@ -47,30 +47,17 @@ const benefits = [
 ]
 
 const serviceCatalog = [
-  'certificacion_nacimiento',
-  'certificacion_antecedentes_penales',
-  'certificacion_matrimonio_divorcio_solteria',
-  'certificacion_viudez',
-  'certificacion_defuncion',
-  'titulos_estudio_certificacion_notas_plan_tematico',
-  'representacion_juridica',
-  'otros',
-  'traducciones_certificadas',
-  'apostillamiento_consulado',
+  { value: 'certificacion_nacimiento', label: 'Certificación de Nacimiento' },
+  { value: 'certificacion_antecedentes_penales', label: 'Certificación de antecedentes penales' },
+  { value: 'certificacion_matrimonio_divorcio_solteria', label: 'Certificación de matrimonio, divorcio, Fe de soltería' },
+  { value: 'certificacion_viudez', label: 'Certificación de viudez' },
+  { value: 'certificacion_defuncion', label: 'Certificación de defunción' },
+  { value: 'titulos_estudio_certificacion_notas_plan_tematico', label: 'Títulos de estudio, certificación de notas y plan temático' },
+  { value: 'representacion_juridica', label: 'Representación jurídica (abogados)' },
+  { value: 'otros', label: 'Otros' },
+  { value: 'traducciones_certificadas', label: 'Traducciones certificadas' },
+  { value: 'apostillamiento_consulado', label: 'Apostillamiento Consulado' },
 ]
-
-const serviceLabels = {
-  certificacion_nacimiento: 'Certificación de Nacimiento',
-  certificacion_antecedentes_penales: 'Certificación de antecedentes penales',
-  certificacion_matrimonio_divorcio_solteria: 'Certificación de matrimonio, divorcio, Fe de soltería',
-  certificacion_viudez: 'Certificación de viudez',
-  certificacion_defuncion: 'Certificación de defunción',
-  titulos_estudio_certificacion_notas_plan_tematico: 'Títulos de estudio, certificación de notas y plan temático',
-  representacion_juridica: 'Representación jurídica (abogados)',
-  otros: 'Otros',
-  traducciones_certificadas: 'Traducciones certificadas',
-  apostillamiento_consulado: 'Apostillamiento Consulado',
-}
 
 function Hero() {
   return (
@@ -116,10 +103,10 @@ function ServiceCatalog() {
         <h2 id="service-catalog-title">Servicios de consultoría y gestión</h2>
       </div>
       <div className="service-catalog__grid">
-        {serviceCatalog.map((value) => (
+        {serviceCatalog.map(({ value, label }) => (
           <article className="service-item" key={value}>
             <span className="service-item__tag">Trámite</span>
-            <h3>{serviceLabels[value]}</h3>
+            <h3>{label}</h3>
           </article>
         ))}
       </div>
@@ -138,7 +125,7 @@ function ApplicationForm() {
   const [photo, setPhoto] = useState(null)
   const [photoUrl, setPhotoUrl] = useState('')
   const [documents, setDocuments] = useState([])
-  const [selectedService, setSelectedService] = useState('')
+  const [selectedServices, setSelectedServices] = useState([])
   const [notice, setNotice] = useState('')
   const [submissionError, setSubmissionError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -171,8 +158,14 @@ function ApplicationForm() {
 
   async function handleSubmit(event) {
     event.preventDefault()
+    if (selectedServices.length === 0) {
+      setSubmissionError('Selecciona al menos un trámite.')
+      return
+    }
+
     const formElement = event.currentTarget
     const formData = new FormData(formElement)
+    formData.set('selected_services', JSON.stringify(selectedServices))
     documents.forEach(({ file }) => formData.append('documents', file))
     setNotice('')
     setSubmissionError('')
@@ -196,7 +189,7 @@ function ApplicationForm() {
       formElement.reset()
       setPhoto(null)
       setDocuments([])
-      setSelectedService('')
+      setSelectedServices([])
     } catch (error) {
       setSubmissionError(
         error instanceof TypeError
@@ -253,24 +246,31 @@ function ApplicationForm() {
               <input autoComplete="tel" name="phone" type="tel" placeholder="+57 300 000 0000" />
             </label>
 
-            <label className="form-field form-field--full">
-              <span>Tipo de trámite <span className="required-mark">*</span></span>
-              <select name="service_type" onChange={(event) => setSelectedService(event.target.value)} value={selectedService} required>
-                <option value="" disabled>Selecciona el trámite que necesitas</option>
-                <option value="certificacion_nacimiento">Certificación de Nacimiento</option>
-                <option value="certificacion_antecedentes_penales">Certificación de antecedentes penales</option>
-                <option value="certificacion_matrimonio_divorcio_solteria">Certificación de matrimonio, divorcio, Fe de soltería</option>
-                <option value="certificacion_viudez">Certificación de viudez</option>
-                <option value="certificacion_defuncion">Certificación de defunción</option>
-                <option value="titulos_estudio_certificacion_notas_plan_tematico">Títulos de estudio, certificación de notas y plan temático</option>
-                <option value="representacion_juridica">Representación jurídica (abogados)</option>
-                <option value="otros">Otros</option>
-                <option value="traducciones_certificadas">Traducciones certificadas</option>
-                <option value="apostillamiento_consulado">Apostillamiento Consulado</option>
-              </select>
-            </label>
+            <fieldset className="form-field form-field--full service-selection">
+              <legend>Selecciona los trámites que necesitas <span className="required-mark">*</span></legend>
+              <p className="service-selection__hint">Puedes marcar más de uno.</p>
+              <div className="service-selection__options">
+                {serviceCatalog.map(({ value, label }) => (
+                  <label className="service-option" key={value}>
+                    <input
+                      checked={selectedServices.includes(value)}
+                      name="service_options"
+                      onChange={(event) => {
+                        setSelectedServices((current) => event.target.checked
+                          ? [...current, value]
+                          : current.filter((service) => service !== value))
+                        setSubmissionError('')
+                      }}
+                      type="checkbox"
+                      value={value}
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
-            {selectedService === 'otros' && (
+            {selectedServices.includes('otros') && (
               <label className="form-field form-field--full">
                 <span>Describe tu trámite <span className="required-mark">*</span></span>
                 <textarea

@@ -133,6 +133,49 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(Application.objects.count(), 1)
         self.assertEqual(ApplicationDocument.objects.count(), 2)
 
+    def test_create_application_with_multiple_selected_services(self):
+        response = self.client.post(
+            reverse("application-create"),
+            {
+                "first_names": "Ana",
+                "last_names": "Pérez",
+                "identification_type": "cedula",
+                "identification_number": "123456789",
+                "email": "ana@example.com",
+                "selected_services": '["certificacion_nacimiento","traducciones_certificadas"]',
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
+            response.data["selected_services"],
+            ["certificacion_nacimiento", "traducciones_certificadas"],
+        )
+        application = Application.objects.get(pk=response.data["id"])
+        self.assertEqual(
+            application.selected_services,
+            ["certificacion_nacimiento", "traducciones_certificadas"],
+        )
+        self.assertEqual(application.service_type, "certificacion_nacimiento")
+
+    def test_create_application_requires_details_when_other_service_is_selected(self):
+        response = self.client.post(
+            reverse("application-create"),
+            {
+                "first_names": "Ana",
+                "last_names": "Pérez",
+                "identification_type": "cedula",
+                "identification_number": "123456789",
+                "email": "ana@example.com",
+                "selected_services": '["certificacion_nacimiento","otros"]',
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("other_service", response.data)
+
     def test_admin_inbox_lists_submissions_and_allows_staff_file_download(self):
         admin_user = get_user_model().objects.create_superuser(
             username="inbox-admin",
@@ -306,6 +349,10 @@ class ApplicationApiTests(APITestCase):
             identification_number="900123",
             email="ana@example.com",
             service_type="apostillamiento_consulado",
+            selected_services=[
+                "apostillamiento_consulado",
+                "traducciones_certificadas",
+            ],
         )
         Application.objects.create(
             first_names="Luis",
@@ -327,7 +374,11 @@ class ApplicationApiTests(APITestCase):
         )
         service_suggestions = self.client.get(
             reverse("admin:applications_application_search_suggestions"),
-            {"q": "Apostillamiento Consulado"},
+            {"q": "Traducciones certificadas"},
+        )
+        service_list = self.client.get(
+            reverse("admin:applications_application_changelist"),
+            {"q": "Traducciones certificadas"},
         )
 
         self.assertEqual(nit_suggestions.status_code, status.HTTP_200_OK)
@@ -341,6 +392,10 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(
             [result["id"] for result in service_suggestions.json()["results"]],
             [nit_application.pk],
+        )
+        self.assertContains(
+            service_list,
+            "Apostillamiento Consulado, Traducciones certificadas",
         )
 
     def test_txt_export_contains_only_selected_application_without_attachments(self):

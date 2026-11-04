@@ -3,7 +3,8 @@ from pathlib import Path
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
-from django.db.models import Count, Q
+from django.db.models import Count, Q, TextField
+from django.db.models.functions import Cast
 from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
@@ -50,7 +51,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         "identification_number",
         "email",
         "phone",
-        "service_type",
+        "service_types_display",
         "document_count",
         "txt_download_link",
         "created_at",
@@ -64,11 +65,11 @@ class ApplicationAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Datos del solicitante", {"fields": ("first_names", "last_names", "identification_type", "identification_number")}),
         ("Contacto", {"fields": ("email", "phone")}),
-        ("Trámite", {"fields": ("service_type", "other_service")}),
+        ("Trámite", {"fields": ("service_types_display", "other_service")}),
         ("Fotografía", {"fields": ("photo_name", "photo_download")}),
         ("Registro", {"fields": ("created_at",)}),
     )
-    readonly_fields = ("photo_name", "photo_download", "created_at")
+    readonly_fields = ("service_types_display", "photo_name", "photo_download", "created_at")
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(document_total=Count("documents", distinct=True))
@@ -80,6 +81,12 @@ class ApplicationAdmin(admin.ModelAdmin):
     @admin.display(description="Documentos", ordering="document_total")
     def document_count(self, application):
         return application.document_total
+
+    @admin.display(description="Trámites solicitados")
+    def service_types_display(self, application):
+        selected_services = application.selected_services or [application.service_type]
+        labels = dict(Application._meta.get_field("service_type").choices)
+        return ", ".join(labels.get(service, service) for service in selected_services)
 
     @admin.display(description="Exportar")
     def txt_download_link(self, application):
@@ -133,10 +140,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         if not query:
             return JsonResponse({"results": []})
 
-        matching_applications = self._filter_search_queryset(
-            self.get_queryset(request),
-            query,
-        )
+        matching_applications = self._filter_search_queryset(self.get_queryset(request), query)
         results = [
             {
                 "id": application.pk,
@@ -145,7 +149,7 @@ class ApplicationAdmin(admin.ModelAdmin):
                     f"{application.last_names} · "
                     f"{application.get_identification_type_display()}: "
                     f"{application.identification_number} · "
-                    f"{application.get_service_type_display()}"
+                    f"{self.service_types_display(application)}"
                 ),
                 "url": reverse(
                     "admin:applications_application_change",
@@ -166,6 +170,9 @@ class ApplicationAdmin(admin.ModelAdmin):
         ]
 
     def _filter_search_queryset(self, queryset, query):
+        queryset = queryset.annotate(
+            selected_services_text=Cast("selected_services", TextField())
+        )
         for term in query.split():
             search_term = Q(first_names__icontains=term)
             search_term |= Q(last_names__icontains=term)
@@ -184,6 +191,11 @@ class ApplicationAdmin(admin.ModelAdmin):
             service_types = self._choice_values_matching(ServiceType.choices, term)
             if service_types:
                 search_term |= Q(service_type__in=service_types)
+                selected_services_text = Cast("selected_services", TextField())
+                for service_type in service_types:
+                    search_term |= Q(
+                        selected_services_text__icontains=f'"{service_type}"'
+                    )
 
             record_id = term.removeprefix("#")
             if record_id.isdecimal():
@@ -215,7 +227,7 @@ class ApplicationAdmin(admin.ModelAdmin):
             f"Número de identificación: {self._txt_value(application.identification_number)}",
             f"Correo: {self._txt_value(application.email)}",
             f"Teléfono: {self._txt_value(application.phone)}",
-            f"Trámite solicitado: {self._txt_value(application.get_service_type_display())}",
+            f"Trámites solicitados: {self._txt_value(self.service_types_display(application))}",
             f"Detalle del trámite: {self._txt_value(application.other_service) if application.service_type == 'otros' else '-'}",
             f"Fecha de solicitud: {timezone.localtime(application.created_at):%Y-%m-%d %H:%M:%S}",
             f"Documentos adjuntos: {application.documents.count()}",
