@@ -49,6 +49,46 @@
       color: #536780;
     }
 
+    .service-types-more {
+      display: inline-block;
+      position: relative;
+    }
+
+    .service-types-more summary {
+      display: inline-block;
+      padding: 0 4px;
+      border-radius: 4px;
+      color: #1260df;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .service-types-more summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .service-types-more summary:hover {
+      background: #e8f0fc;
+    }
+
+    .service-types-more ul {
+      min-width: 220px;
+      margin: 4px 0 0;
+      padding: 8px 8px 8px 26px;
+      border: 1px solid #d5e1f5;
+      border-radius: 5px;
+      background: #fff;
+      box-shadow: 0 6px 16px rgba(12, 40, 81, .12);
+    }
+
+    .service-types-more li {
+      padding: 3px 0;
+      white-space: normal;
+    }
+
     @media (max-width: 767px) {
       #changelist {
         display: block;

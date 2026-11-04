@@ -9,7 +9,7 @@ from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.urls import path, reverse
 from django.utils.dateparse import parse_date
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 from django.utils import timezone
 
 from .models import Application, ApplicationDocument, IdentificationType, ServiceType
@@ -51,7 +51,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         "identification_number",
         "email",
         "phone",
-        "service_types_display",
+        "service_types_summary",
         "document_count",
         "txt_download_link",
         "created_at",
@@ -87,6 +87,28 @@ class ApplicationAdmin(admin.ModelAdmin):
         selected_services = application.selected_services or [application.service_type]
         labels = dict(Application._meta.get_field("service_type").choices)
         return ", ".join(labels.get(service, service) for service in selected_services)
+
+    @admin.display(description="Trámites solicitados")
+    def service_types_summary(self, application):
+        selected_services = application.selected_services or [application.service_type]
+        labels = dict(Application._meta.get_field("service_type").choices)
+        service_labels = [labels.get(service, service) for service in selected_services]
+        if len(service_labels) == 1:
+            return service_labels[0]
+
+        additional_services = format_html_join(
+            "",
+            "<li>{}</li>",
+            ((label,) for label in service_labels[1:]),
+        )
+        return format_html(
+            '<span>{}</span> <details class="service-types-more">'
+            '<summary aria-label="Ver {} trámites más" title="Ver otros trámites">…</summary>'
+            "<ul>{}</ul></details>",
+            service_labels[0],
+            len(service_labels) - 1,
+            additional_services,
+        )
 
     @admin.display(description="Exportar")
     def txt_download_link(self, application):

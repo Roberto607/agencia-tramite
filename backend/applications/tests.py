@@ -227,6 +227,38 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(download.status_code, status.HTTP_200_OK)
         self.assertEqual(b"".join(download.streaming_content), b"private document")
 
+    def test_admin_list_collapses_additional_services_behind_ellipsis(self):
+        admin_user = get_user_model().objects.create_superuser(
+            "compact-services-admin",
+            "compact-services@example.com",
+            "compact-services-password-for-test",
+        )
+        Application.objects.create(
+            first_names="Ana",
+            last_names="Pérez",
+            identification_type="cedula",
+            identification_number="12345",
+            email="ana@example.com",
+            service_type="certificacion_nacimiento",
+            selected_services=[
+                "certificacion_nacimiento",
+                "traducciones_certificadas",
+                "apostillamiento_consulado",
+            ],
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(
+            reverse("admin:applications_application_changelist")
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, "Certificación de Nacimiento")
+        self.assertContains(response, 'class="service-types-more"', html=False)
+        self.assertContains(response, "Ver 2 trámites más", html=False)
+        self.assertContains(response, "<li>Traducciones certificadas</li>", html=False)
+        self.assertContains(response, "<li>Apostillamiento Consulado</li>", html=False)
+
     def test_admin_search_filters_applications_by_query(self):
         admin_user = get_user_model().objects.create_superuser(
             "search-admin",
@@ -398,9 +430,11 @@ class ApplicationApiTests(APITestCase):
             [result["id"] for result in service_suggestions.json()["results"]],
             [nit_application.pk],
         )
+        self.assertContains(service_list, "Apostillamiento Consulado")
+        self.assertContains(service_list, 'class="service-types-more"', html=False)
+        self.assertContains(service_list, "Traducciones certificadas")
         self.assertContains(
             service_list,
-            "Apostillamiento Consulado, Traducciones certificadas, "
             "Asesoramiento empresarial: Pymes, TCP, CNA y otros actores económicos",
         )
         self.assertEqual(advisory_suggestions.status_code, status.HTTP_200_OK)
