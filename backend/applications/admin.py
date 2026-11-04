@@ -410,6 +410,9 @@ class ApplicationAdmin(admin.ModelAdmin):
 
 @admin.register(ApplicationNotification)
 class ApplicationNotificationAdmin(admin.ModelAdmin):
+    change_list_template = (
+        "admin/applications/applicationnotification/change_list.html"
+    )
     list_display = (
         "application_link",
         "applicant_name",
@@ -426,6 +429,7 @@ class ApplicationNotificationAdmin(admin.ModelAdmin):
         "applicant_name",
         "phone",
         "application__identification_number",
+        "message",
     )
     ordering = ("-created_at", "-pk")
     readonly_fields = (
@@ -458,6 +462,67 @@ class ApplicationNotificationAdmin(admin.ModelAdmin):
     @admin.display(description="Notificación")
     def notification_state(self, notification):
         return "Preparada para WhatsApp"
+
+    def get_urls(self):
+        custom_urls = [
+            path(
+                "search-suggestions/",
+                self.admin_site.admin_view(self.search_suggestions),
+                name="applications_applicationnotification_search_suggestions",
+            ),
+        ]
+        return custom_urls + super().get_urls()
+
+    def search_suggestions(self, request):
+        if not self.has_view_or_change_permission(request):
+            return JsonResponse(
+                {"detail": "No tienes permiso para consultar solicitudes."},
+                status=403,
+            )
+
+        query = request.GET.get("q", "").strip()
+        if not query:
+            return JsonResponse({"results": []})
+
+        queryset = self.get_queryset(request).select_related(
+            "application",
+            "created_by",
+        )
+        for term in query.split():
+            matching_term = Q(application_reference__icontains=term)
+            matching_term |= Q(applicant_name__icontains=term)
+            matching_term |= Q(phone__icontains=term)
+            matching_term |= Q(message__icontains=term)
+            matching_term |= Q(
+                application__identification_number__icontains=term
+            )
+            matching_term |= Q(created_by__username__icontains=term)
+
+            matching_statuses = ApplicationAdmin._choice_values_matching(
+                ApplicationStatus.choices,
+                term,
+            )
+            if matching_statuses:
+                matching_term |= Q(status__in=matching_statuses)
+            queryset = queryset.filter(matching_term)
+
+        results = [
+            {
+                "id": notification.pk,
+                "label": (
+                    f"{notification.application_reference} · "
+                    f"{notification.applicant_name} · "
+                    f"{notification.get_status_display()} · "
+                    f"{notification.phone}"
+                ),
+                "url": reverse(
+                    "admin:applications_applicationnotification_change",
+                    args=(notification.pk,),
+                ),
+            }
+            for notification in queryset.order_by("-created_at", "-pk")[:8]
+        ]
+        return JsonResponse({"results": results})
 
     def has_add_permission(self, request):
         return False
