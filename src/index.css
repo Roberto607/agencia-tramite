@@ -78,7 +78,6 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .service-selection__hint { margin: -2px 0 2px; color: #718198; font-size: 12px; font-weight: 400; }
 .service-selection__options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .service-option { min-width: 0; min-height: 48px; padding: 11px 13px; display: flex; align-items: flex-start; gap: 10px; border: 1px solid #d5e1f5; border-radius: 5px; background: #fbfcfe; color: #173456; font-size: 13px; font-weight: 500; line-height: 1.4; cursor: pointer; transition: border-color 150ms ease, background 150ms ease; }
-.service-option:has(input:checked) { border-color: #1260df; background: #f0f6ff; }
 .service-option input { width: 17px; height: 17px; flex: 0 0 17px; margin: 0; accent-color: #1260df; }
 .service-option:focus-within { outline: 3px solid rgba(18, 96, 223, .14); outline-offset: 1px; }
 .form-field:nth-child(2) { animation-delay: 320ms; }
