@@ -14,6 +14,7 @@ import {
   Zap,
   Youtube,
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import ApplicationPage from './ApplicationPage'
 
 
@@ -140,7 +141,20 @@ function Footer() {
 }
 
 export default function App() {
-  if (window.location.hash === '#/solicitud') {
+  const [isApplicationPage, setIsApplicationPage] = useState(
+    () => window.location.hash === '#/solicitud',
+  )
+
+  useEffect(() => {
+    function syncRoute() {
+      setIsApplicationPage(window.location.hash === '#/solicitud')
+    }
+
+    window.addEventListener('hashchange', syncRoute)
+    return () => window.removeEventListener('hashchange', syncRoute)
+  }, [])
+
+  if (isApplicationPage) {
     return <ApplicationPage />
   }
 
