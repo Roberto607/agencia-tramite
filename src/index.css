@@ -78,12 +78,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .service-selection__hint { margin: -2px 0 2px; color: #718198; font-size: 12px; font-weight: 400; }
 .service-selection__options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .service-option { min-width: 0; min-height: 48px; padding: 11px 13px; display: flex; align-items: flex-start; gap: 10px; border: 1px solid #d5e1f5; border-radius: 5px; background: #fbfcfe; color: #173456; font-size: 13px; font-weight: 500; line-height: 1.4; cursor: pointer; transition: border-color 150ms ease, background 150ms ease; }
-.service-option input { appearance: none; width: 17px; height: 17px; flex: 0 0 17px; margin: 0; display: grid; place-content: center; border: 1px solid #8794a5; border-radius: 3px; background: #fff; cursor: pointer; }
+.service-option:has(input:checked) { border-color: #1260df; background: #f0f6ff; }
+.service-option input { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; flex: 0 0 17px; margin: 0; display: grid; place-content: center; border: 1px solid #8794a5; border-radius: 3px; background: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .service-option input::before { content: ''; width: 8px; height: 4px; border-bottom: 2px solid #fff; border-left: 2px solid #fff; transform: rotate(-45deg) scale(0); }
 .service-option input:checked { border-color: #1260df; background: #1260df; }
 .service-option input:checked::before { transform: rotate(-45deg) scale(1); }
-.service-option:focus-within { outline: none; box-shadow: none; }
-.service-option input:focus { outline: none; box-shadow: none; }
+.service-option:focus-within { outline: none !important; box-shadow: none !important; }
+.service-option:has(input:focus-visible) { outline: 2px solid #1260df; outline-offset: 2px; }
+.service-option input:focus,
+.service-option input:focus-visible,
+.service-option input:active { outline: none !important; box-shadow: none !important; }
 .form-field:nth-child(2) { animation-delay: 320ms; }
 .form-field:nth-child(3) { animation-delay: 380ms; }
 .form-field:nth-child(4) { animation-delay: 440ms; }
