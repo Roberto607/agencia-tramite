@@ -71,6 +71,11 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .application-heading h2 { margin: 7px 0 8px; color: #0c2851; font-size: 32px; line-height: 1.15; font-weight: 800; }
 .application-heading p { margin: 0; color: #536780; font-size: 15px; }
 .application-form { padding: 34px; border: 1px solid #dce5f1; border-radius: 6px; background: #fff; box-shadow: 0 10px 28px rgba(12, 40, 81, .06); }
+.application-complete { display: flex; align-items: flex-start; gap: 16px; border-color: #bbdfcb; background: #f0faf4; color: #215e3b; }
+.application-complete > svg { flex: 0 0 auto; }
+.application-complete h3 { margin: 0 0 8px; color: #174b2d; font-size: 19px; line-height: 1.4; }
+.application-complete p { margin: 0 0 13px; color: #3d674d; font-size: 14px; }
+.service-documents { padding-top: 15px; border-top: 1px solid #e5ebf3; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 23px 20px; }
 .form-field { min-width: 0; display: flex; flex-direction: column; gap: 9px; color: #152f53; font-size: 13px; font-weight: 700; animation: section-enter 400ms ease-out 260ms both; }
 .service-selection { min-width: 0; margin: 0; padding: 0; border: 0; }

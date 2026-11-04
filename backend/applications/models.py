@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 class IdentificationType(models.TextChoices):
@@ -24,6 +25,13 @@ class ServiceType(models.TextChoices):
 
 
 class Application(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name="applications",
+        blank=True,
+        null=True,
+    )
     first_names = models.CharField(max_length=120)
     last_names = models.CharField(max_length=120)
     identification_type = models.CharField(max_length=20, choices=IdentificationType.choices)
@@ -48,6 +56,12 @@ class Application(models.Model):
 class ApplicationDocument(models.Model):
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name="documents")
     file = models.FileField(upload_to="applications/documents/%Y/%m/")
+    service_type = models.CharField(
+        max_length=80,
+        choices=ServiceType.choices,
+        blank=True,
+        default="",
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -57,3 +71,17 @@ class ApplicationDocument(models.Model):
 
     def __str__(self):
         return self.file.name
+
+
+class ClientProfile(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="client_profile",
+    )
+    identification_type = models.CharField(max_length=20, choices=IdentificationType.choices)
+    identification_number = models.CharField(max_length=40)
+    phone = models.CharField(max_length=40)
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.identification_number})"

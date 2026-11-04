@@ -17,7 +17,7 @@ from .models import Application, ApplicationDocument, IdentificationType, Servic
 
 class ApplicationDocumentInline(admin.TabularInline):
     model = ApplicationDocument
-    fields = ("file_name", "uploaded_at", "download_link")
+    fields = ("service_label", "file_name", "uploaded_at", "download_link")
     readonly_fields = fields
     extra = 0
     can_delete = False
@@ -25,6 +25,10 @@ class ApplicationDocumentInline(admin.TabularInline):
     @admin.display(description="Documento")
     def file_name(self, document):
         return Path(document.file.name).name
+
+    @admin.display(description="Trámite")
+    def service_label(self, document):
+        return document.get_service_type_display() if document.service_type else "General"
 
     @admin.display(description="Archivo")
     def download_link(self, document):

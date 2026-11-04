@@ -92,6 +92,89 @@ class ApplicationApiTests(APITestCase):
         media_settings.enable()
         self.addCleanup(media_settings.disable)
 
+    def test_registration_authenticates_client_and_attaches_documents_to_services(self):
+        registration_data = {
+            "first_names": "Ana María",
+            "last_names": "Pérez López",
+            "identification_type": "cedula",
+            "identification_number": "123456789",
+            "phone": "+53 58049659",
+            "email": "ana@example.com",
+            "password": "V3ry-Strong-Account-Password-892!",
+        }
+        registration = self.client.post(
+            reverse("client-registration"),
+            registration_data,
+            format="json",
+        )
+
+        self.assertEqual(registration.status_code, status.HTTP_201_CREATED)
+        self.assertNotIn("password", registration.data)
+        user = get_user_model().objects.get(email="ana@example.com")
+        self.assertTrue(user.check_password(registration_data["password"]))
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {registration.data['token']}")
+
+        application_response = self.client.post(
+            reverse("application-create"),
+            {
+                "first_names": "Nombre manipulado",
+                "last_names": "Apellido manipulado",
+                "identification_type": "otro",
+                "identification_number": "999",
+                "email": "otra@example.com",
+                "phone": "+1 555 000 0000",
+                "selected_services": '["certificacion_nacimiento","traducciones_certificadas"]',
+                "documents_certificacion_nacimiento": SimpleUploadedFile(
+                    "nacimiento.pdf",
+                    b"birth document",
+                    content_type="application/pdf",
+                ),
+                "documents_traducciones_certificadas": SimpleUploadedFile(
+                    "traduccion.jpg",
+                    b"translation image",
+                    content_type="image/jpeg",
+                ),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(application_response.status_code, status.HTTP_201_CREATED)
+        application = Application.objects.get(pk=application_response.data["id"])
+        self.assertEqual(application.user, user)
+        self.assertEqual(application.first_names, "Ana María")
+        self.assertEqual(application.last_names, "Pérez López")
+        self.assertEqual(application.identification_number, "123456789")
+        self.assertEqual(application.email, "ana@example.com")
+        self.assertEqual(
+            list(application.documents.values_list("service_type", flat=True)),
+            ["certificacion_nacimiento", "traducciones_certificadas"],
+        )
+
+    def test_registration_rejects_an_existing_email(self):
+        registration_data = {
+            "first_names": "Ana",
+            "last_names": "Pérez",
+            "identification_type": "cedula",
+            "identification_number": "123456789",
+            "phone": "+53 58049659",
+            "email": "ana@example.com",
+            "password": "V3ry-Strong-Account-Password-892!",
+        }
+        first_response = self.client.post(
+            reverse("client-registration"),
+            registration_data,
+            format="json",
+        )
+        duplicate_response = self.client.post(
+            reverse("client-registration"),
+            registration_data,
+            format="json",
+        )
+
+        self.assertEqual(first_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(duplicate_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("email", duplicate_response.data)
+
     def test_root_redirects_to_admin_login(self):
         response = self.client.get("/")
 
