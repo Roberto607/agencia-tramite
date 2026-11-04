@@ -4,7 +4,12 @@ from django.db import transaction
 from django.db.models import Q
 from rest_framework import serializers
 
-from .models import Application, ApplicationDocument, ClientProfile
+from .models import (
+    Application,
+    ApplicationDocument,
+    ApplicationFileType,
+    ClientProfile,
+)
 
 
 class ClientRegistrationSerializer(serializers.Serializer):
@@ -110,13 +115,21 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
         request = self.context.get("request")
         if request is not None:
-            unselected_attachments = [
-                key.removeprefix("documents_")
-                for key in request.FILES
-                if key.startswith("documents_")
-                and key.removeprefix("documents_") not in selected_services
-            ]
-            if unselected_attachments:
+            valid_service_types = {
+                service for service, _label in Application._meta.get_field("service_type").choices
+            }
+            invalid_attachment_fields = []
+            for key in request.FILES:
+                if key.startswith("documents_"):
+                    service_type = key.removeprefix("documents_")
+                elif key.startswith("photos_"):
+                    service_type = key.removeprefix("photos_")
+                else:
+                    continue
+                if service_type not in valid_service_types or service_type not in selected_services:
+                    invalid_attachment_fields.append(key)
+
+            if invalid_attachment_fields:
                 raise serializers.ValidationError(
                     {"documents": "Solo puedes adjuntar archivos a los trámites seleccionados."}
                 )
@@ -148,11 +161,19 @@ class ApplicationSerializer(serializers.ModelSerializer):
                 ApplicationDocument.objects.create(application=application, file=uploaded_file)
             if request is not None:
                 for service_type in selected_services:
+                    for uploaded_file in request.FILES.getlist(f"photos_{service_type}"):
+                        ApplicationDocument.objects.create(
+                            application=application,
+                            file=uploaded_file,
+                            service_type=service_type,
+                            file_type=ApplicationFileType.PHOTO,
+                        )
                     for uploaded_file in request.FILES.getlist(f"documents_{service_type}"):
                         ApplicationDocument.objects.create(
                             application=application,
                             file=uploaded_file,
                             service_type=service_type,
+                            file_type=ApplicationFileType.DOCUMENT,
                         )
         return application
 

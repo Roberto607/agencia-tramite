@@ -24,6 +24,11 @@ class ServiceType(models.TextChoices):
     OTHER = "otros", "Otros"
 
 
+class ApplicationFileType(models.TextChoices):
+    PHOTO = "photo", "Fotografía"
+    DOCUMENT = "document", "Documento"
+
+
 class Application(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -62,12 +67,17 @@ class ApplicationDocument(models.Model):
         blank=True,
         default="",
     )
+    file_type = models.CharField(
+        max_length=12,
+        choices=ApplicationFileType.choices,
+        default=ApplicationFileType.DOCUMENT,
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["uploaded_at", "pk"]
-        verbose_name = "documento adjunto"
-        verbose_name_plural = "documentos adjuntos"
+        verbose_name = "archivo adjunto"
+        verbose_name_plural = "archivos adjuntos"
 
     def __str__(self):
         return self.file.name

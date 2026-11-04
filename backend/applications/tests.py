@@ -124,15 +124,15 @@ class ApplicationApiTests(APITestCase):
                 "email": "otra@example.com",
                 "phone": "+1 555 000 0000",
                 "selected_services": '["certificacion_nacimiento","traducciones_certificadas"]',
-                "documents_certificacion_nacimiento": SimpleUploadedFile(
-                    "nacimiento.pdf",
-                    b"birth document",
-                    content_type="application/pdf",
+                "photos_certificacion_nacimiento": SimpleUploadedFile(
+                    "nacimiento.jpg",
+                    b"birth photo",
+                    content_type="image/jpeg",
                 ),
                 "documents_traducciones_certificadas": SimpleUploadedFile(
-                    "traduccion.jpg",
-                    b"translation image",
-                    content_type="image/jpeg",
+                    "traduccion.pdf",
+                    b"translation document",
+                    content_type="application/pdf",
                 ),
             },
             format="multipart",
@@ -146,9 +146,26 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(application.identification_number, "123456789")
         self.assertEqual(application.email, "ana@example.com")
         self.assertEqual(
-            list(application.documents.values_list("service_type", flat=True)),
-            ["certificacion_nacimiento", "traducciones_certificadas"],
+            list(application.documents.values_list("service_type", "file_type")),
+            [
+                ("certificacion_nacimiento", "photo"),
+                ("traducciones_certificadas", "document"),
+            ],
         )
+        self.client.force_login(
+            get_user_model().objects.create_superuser(
+                "attachment-admin",
+                "attachments@example.com",
+                "attachment-admin-password-for-test",
+            )
+        )
+        detail = self.client.get(
+            reverse("admin:applications_application_change", args=(application.pk,))
+        )
+        self.assertContains(detail, "Fotografía")
+        self.assertContains(detail, "Documento")
+        self.assertContains(detail, "Certificación de Nacimiento")
+        self.assertContains(detail, "Traducciones certificadas")
 
     def test_registration_rejects_an_existing_email(self):
         registration_data = {
@@ -318,6 +335,14 @@ class ApplicationApiTests(APITestCase):
         document = ApplicationDocument.objects.create(
             application=application,
             file=SimpleUploadedFile("soporte.pdf", b"private document", content_type="application/pdf"),
+            service_type="certificacion_nacimiento",
+            file_type="document",
+        )
+        photo = ApplicationDocument.objects.create(
+            application=application,
+            file=SimpleUploadedFile("nacimiento.jpg", b"private photo", content_type="image/jpeg"),
+            service_type="certificacion_nacimiento",
+            file_type="photo",
         )
         self.client.force_login(admin_user)
 
@@ -327,6 +352,12 @@ class ApplicationApiTests(APITestCase):
             reverse(
                 "admin:applications_application_document_download",
                 args=(application.pk, document.pk),
+            )
+        )
+        photo_download = self.client.get(
+            reverse(
+                "admin:applications_application_document_download",
+                args=(application.pk, photo.pk),
             )
         )
 
@@ -349,8 +380,13 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(inbox, 'id="user-tools"', html=False)
         self.assertEqual(detail.status_code, status.HTTP_200_OK)
         self.assertContains(detail, "soporte.pdf")
+        self.assertContains(detail, "nacimiento.jpg")
+        self.assertContains(detail, "Fotografía")
+        self.assertContains(detail, "Certificación de Nacimiento")
         self.assertEqual(download.status_code, status.HTTP_200_OK)
         self.assertEqual(b"".join(download.streaming_content), b"private document")
+        self.assertEqual(photo_download.status_code, status.HTTP_200_OK)
+        self.assertEqual(b"".join(photo_download.streaming_content), b"private photo")
 
     def test_admin_list_collapses_additional_services_behind_ellipsis(self):
         admin_user = get_user_model().objects.create_superuser(
@@ -606,7 +642,7 @@ class ApplicationApiTests(APITestCase):
         self.assertIn(f'attachment; filename="tramite-{application.pk}-lba.txt"', response["Content-Disposition"])
         self.assertIn("luis@example.com", export)
         self.assertIn("123456789", export)
-        self.assertIn("Documentos adjuntos: 1", export)
+        self.assertIn("Archivos adjuntos: 1", export)
         self.assertNotIn("maria@example.com", export)
         self.assertNotIn("P-98765", export)
         self.assertNotIn("private-photo", export)

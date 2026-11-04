@@ -157,8 +157,9 @@ function ApplicationForm() {
     formData.set('selected_services', JSON.stringify(selectedServices))
     selectedServices.forEach((service) => {
       const documents = serviceDocuments[service] ?? []
-      documents.forEach(({ file }) => {
-        formData.append(`documents_${service}`, file)
+      documents.forEach(({ file, fileType }) => {
+        const fieldPrefix = fileType === 'photo' ? 'photos' : 'documents'
+        formData.append(`${fieldPrefix}_${service}`, file)
       })
     })
     setSubmissionError('')

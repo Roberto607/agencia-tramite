@@ -17,18 +17,22 @@ from .models import Application, ApplicationDocument, IdentificationType, Servic
 
 class ApplicationDocumentInline(admin.TabularInline):
     model = ApplicationDocument
-    fields = ("service_label", "file_name", "uploaded_at", "download_link")
+    fields = ("service_label", "file_type_label", "file_name", "uploaded_at", "download_link")
     readonly_fields = fields
     extra = 0
     can_delete = False
 
-    @admin.display(description="Documento")
+    @admin.display(description="Archivo")
     def file_name(self, document):
         return Path(document.file.name).name
 
     @admin.display(description="Trámite")
     def service_label(self, document):
         return document.get_service_type_display() if document.service_type else "General"
+
+    @admin.display(description="Tipo")
+    def file_type_label(self, document):
+        return document.get_file_type_display()
 
     @admin.display(description="Archivo")
     def download_link(self, document):
@@ -82,7 +86,7 @@ class ApplicationAdmin(admin.ModelAdmin):
     def full_name(self, application):
         return f"{application.first_names} {application.last_names}"
 
-    @admin.display(description="Documentos", ordering="document_total")
+    @admin.display(description="Archivos", ordering="document_total")
     def document_count(self, application):
         return application.document_total
 
@@ -256,7 +260,7 @@ class ApplicationAdmin(admin.ModelAdmin):
             f"Trámites solicitados: {self._txt_value(self.service_types_display(application))}",
             f"Detalle del trámite: {self._txt_value(application.other_service) if application.service_type == 'otros' else '-'}",
             f"Fecha de solicitud: {timezone.localtime(application.created_at):%Y-%m-%d %H:%M:%S}",
-            f"Documentos adjuntos: {application.documents.count()}",
+            f"Archivos adjuntos: {application.documents.count()}",
         ]
         response = HttpResponse("\n".join(lines), content_type="text/plain; charset=utf-8")
         response["Content-Disposition"] = f'attachment; filename="tramite-{application.pk}-lba.txt"'
