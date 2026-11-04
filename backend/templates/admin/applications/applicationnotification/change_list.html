@@ -1,175 +1,24 @@
 {% extends "admin/change_list.html" %}
-{% load i18n admin_list %}
-
-{% block extrastyle %}
-  {{ block.super }}
-  <style>
-    .application-search {
-      position: relative;
-      z-index: 3;
-    }
-
-    .application-search__suggestions {
-      position: absolute;
-      z-index: 5;
-      top: 100%;
-      right: 0;
-      left: 0;
-      display: none;
-      max-height: min(50vh, 360px);
-      margin: 0;
-      padding: 5px 0;
-      overflow-y: auto;
-      border: 1px solid #d5e1f5;
-      border-radius: 0 0 6px 6px;
-      background: #fff;
-      box-shadow: 0 8px 20px rgba(12, 40, 81, .14);
-      list-style: none;
-    }
-
-    .application-search__suggestions.is-visible {
-      display: block;
-    }
-
-    .application-search__suggestion {
-      display: block;
-      padding: 10px 14px;
-      color: #173456;
-      text-decoration: none;
-    }
-
-    .application-search__suggestion:hover,
-    .application-search__suggestion:focus {
-      background: #e8f0fc;
-      color: #0c2851;
-    }
-
-    .application-search__empty {
-      padding: 10px 14px;
-      color: #536780;
-    }
-  </style>
-{% endblock %}
-
-{% block search %}
-  {% if cl.search_fields %}
-    <div
-      class="application-search"
-      data-suggestions-url="{% url 'admin:applications_applicationnotification_search_suggestions' %}"
-    >
-      {% search_form cl %}
-      <ul
-        class="application-search__suggestions"
-        id="application-search-suggestions"
-        role="listbox"
-        aria-label="Solicitudes coincidentes"
-        aria-live="polite"
-      ></ul>
-    </div>
-  {% endif %}
-{% endblock %}
 
 {% block extrahead %}
   {{ block.super }}
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      const search = document.querySelector(".application-search");
       const input = document.getElementById("searchbar");
-      const suggestions = document.getElementById("application-search-suggestions");
-      if (!search || !input || !suggestions) return;
       const form = document.getElementById("changelist-search");
-
-      input.setAttribute("role", "combobox");
-      input.setAttribute("aria-autocomplete", "list");
-      input.setAttribute("aria-controls", suggestions.id);
-      input.setAttribute("aria-expanded", "false");
+      if (!input || !form) return;
 
       let timeout;
-      let controller;
-
-      function closeSuggestions() {
-        suggestions.replaceChildren();
-        suggestions.classList.remove("is-visible");
-        input.setAttribute("aria-expanded", "false");
-      }
-
-      function showMessage(message) {
-        const item = document.createElement("li");
-        item.className = "application-search__empty";
-        item.setAttribute("role", "presentation");
-        item.textContent = message;
-        suggestions.replaceChildren(item);
-        suggestions.classList.add("is-visible");
-        input.setAttribute("aria-expanded", "true");
-      }
-
       input.addEventListener("input", function () {
         window.clearTimeout(timeout);
-        if (controller) controller.abort();
-
-        const query = input.value.trim();
-        if (query.length < 2) {
-          closeSuggestions();
-          if (!query && form) {
-            timeout = window.setTimeout(function () {
-              form.requestSubmit();
-            }, 200);
-          }
-          return;
-        }
-
-        timeout = window.setTimeout(async function () {
-          controller = new AbortController();
-          try {
-            const url = new URL(search.dataset.suggestionsUrl, window.location.origin);
-            url.searchParams.set("q", query);
-            const response = await fetch(url, {
-              headers: { Accept: "application/json" },
-              signal: controller.signal,
-            });
-            if (!response.ok) throw new Error("No se pudieron cargar las sugerencias.");
-
-            const { results } = await response.json();
-            if (input.value.trim() !== query) return;
-            if (results.length === 0) {
-              showMessage("No se encontraron solicitudes.");
-              return;
-            }
-
-            const items = results.map(function (result) {
-              const item = document.createElement("li");
-              item.setAttribute("role", "option");
-              const link = document.createElement("a");
-              link.className = "application-search__suggestion";
-              link.href = result.url;
-              link.textContent = result.label;
-              item.append(link);
-              return item;
-            });
-            suggestions.replaceChildren(...items);
-            suggestions.classList.add("is-visible");
-            input.setAttribute("aria-expanded", "true");
-          } catch (error) {
-            if (error.name === "AbortError") return;
-            showMessage("No se pudieron cargar las sugerencias. Puedes buscar con Enter.");
-          }
-        }, 250);
+        timeout = window.setTimeout(function () {
+          form.requestSubmit();
+        }, 400);
       });
 
-      input.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") closeSuggestions();
+      form.addEventListener("submit", function () {
+        window.clearTimeout(timeout);
       });
-
-      document.addEventListener("click", function (event) {
-        if (!search.contains(event.target)) closeSuggestions();
-      });
-
-      if (form) {
-        form.addEventListener("submit", function () {
-          window.clearTimeout(timeout);
-          closeSuggestions();
-        });
-      }
     });
   </script>
 {% endblock %}

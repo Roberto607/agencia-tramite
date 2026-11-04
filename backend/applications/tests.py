@@ -455,31 +455,29 @@ class ApplicationApiTests(APITestCase):
             reverse("admin:applications_applicationnotification_changelist")
         )
         notification_search_url = reverse(
-            "admin:applications_applicationnotification_search_suggestions"
+            "admin:applications_applicationnotification_changelist"
         )
-        notification_suggestions = self.client.get(
+        matching_notifications = self.client.get(
             notification_search_url,
-            {"q": "Ana María rechazada"},
+            {"q": "Ana María"},
+        )
+        rejected_notifications = self.client.get(
+            notification_search_url,
+            {"q": "rechazada"},
         )
         self.assertEqual(
             ApplicationNotification.objects.filter(application=application).count(),
             2,
         )
-        self.assertEqual(notification_suggestions.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(notification_suggestions.json()["results"]), 1)
-        self.assertIn("Rechazada", notification_suggestions.json()["results"][0]["label"])
-        self.assertEqual(
-            notification_suggestions.json()["results"][0]["url"],
-            reverse(
-                "admin:applications_applicationnotification_change",
-                args=(notification_suggestions.json()["results"][0]["id"],),
-            ),
-        )
+        self.assertEqual(matching_notifications.status_code, status.HTTP_200_OK)
+        self.assertEqual(matching_notifications.context["cl"].result_count, 2)
+        self.assertEqual(rejected_notifications.context["cl"].result_count, 1)
+        self.assertContains(rejected_notifications, "Rechazada")
         self.assertContains(notifications, "Aprobada")
         self.assertContains(notifications, "Rechazada")
         self.assertContains(notifications, "Preparada para WhatsApp")
         self.assertContains(notifications, "Ana María Pérez")
-        self.assertContains(notifications, f'data-suggestions-url="{notification_search_url}"')
+        self.assertContains(notifications, "form.requestSubmit();", html=False)
 
     def test_admin_review_does_not_change_status_without_a_valid_phone(self):
         admin_user = get_user_model().objects.create_superuser(
