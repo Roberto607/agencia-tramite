@@ -490,6 +490,7 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(notifications, "Preparada para WhatsApp")
         self.assertContains(notifications, "Ana María Pérez")
         self.assertContains(notifications, "form.requestSubmit();", html=False)
+        self.assertNotContains(notifications, 'id="changelist-filter"', html=False)
 
     def test_admin_review_does_not_change_status_without_a_valid_phone(self):
         admin_user = get_user_model().objects.create_superuser(
