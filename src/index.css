@@ -64,10 +64,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .benefit__copy p { max-width: 205px; margin: 0; color: #223b61; font-size: 13px; line-height: 1.45; }
 
 .application-page { min-height: 100vh; background: #f3f7fc; }
-.application-page__header { min-height: 76px; padding: 0 max(24px, calc((100% - 980px) / 2)); display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid #e1e9f4; background: #fff; }
-.application-page__brand { color: var(--navy); font-size: 20px; font-weight: 800; }
-.application-page__back { color: #245591; font-size: 14px; font-weight: 700; }
-.application-page__back:hover { color: var(--blue); text-decoration: underline; }
+.application-page__header { min-height: 76px; padding: 0 max(24px, calc((100% - 980px) / 2)); display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid rgba(255, 255, 255, .16); background: #102f5c; }
+.application-page__brand { color: #fff; font-size: 20px; font-weight: 800; }
+.application-page__back { color: rgba(255, 255, 255, .9); font-size: 14px; font-weight: 700; }
+.application-page__back:hover { color: #fff; text-decoration: underline; }
 .application-section { padding: 66px 0 76px; background: #f3f7fc; scroll-margin-top: 16px; animation: section-enter 650ms cubic-bezier(.2, .7, .2, 1) 180ms both; }
 .application-inner { width: min(100% - 48px, 980px); margin: 0 auto; }
 .application-heading { margin: 0 0 25px; }
