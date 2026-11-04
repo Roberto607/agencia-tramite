@@ -1,0 +1,13 @@
+{% load i18n admin_urls %}
+<div class="submit-row">
+  {% if has_change_permission %}
+    {% url 'admin:applications_application_review_status' original.pk 'approved' as approve_url %}
+    {% url 'admin:applications_application_review_status' original.pk 'rejected' as reject_url %}
+    <a class="button" href="{{ approve_url }}">Aceptar solicitud</a>
+    <a class="button" href="{{ reject_url }}">Rechazar solicitud</a>
+  {% endif %}
+  {% if has_delete_permission %}
+    {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
+    <a href="{% add_preserved_filters delete_url %}" class="deletelink">{% translate "Delete" %}</a>
+  {% endif %}
+</div>

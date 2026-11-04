@@ -69,6 +69,7 @@ class ApplicationDocumentInline(admin.TabularInline):
 @admin.register(Application)
 class ApplicationAdmin(admin.ModelAdmin):
     change_list_template = "admin/applications/application/change_list.html"
+    change_form_template = "admin/applications/application/change_form.html"
     list_display = (
         "id",
         "full_name",
@@ -78,7 +79,6 @@ class ApplicationAdmin(admin.ModelAdmin):
         "phone",
         "service_types_summary",
         "status_display",
-        "review_actions",
         "document_count",
         "txt_download_link",
         "created_at",
@@ -96,16 +96,21 @@ class ApplicationAdmin(admin.ModelAdmin):
         ("Estado de la solicitud", {"fields": ("status_display",)}),
         ("Registro", {"fields": ("created_at",)}),
     )
-    readonly_fields = ("service_types_display", "status_display", "created_at")
+    readonly_fields = (
+        "first_names",
+        "last_names",
+        "identification_type",
+        "identification_number",
+        "email",
+        "phone",
+        "service_types_display",
+        "other_service",
+        "status_display",
+        "created_at",
+    )
 
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(document_total=Count("documents", distinct=True))
-
-    def get_list_display(self, request):
-        list_display = super().get_list_display(request)
-        if not self.has_change_permission(request):
-            return tuple(field for field in list_display if field != "review_actions")
-        return list_display
 
     @admin.display(description="Solicitante")
     def full_name(self, application):
@@ -146,25 +151,6 @@ class ApplicationAdmin(admin.ModelAdmin):
     @admin.display(description="Estado")
     def status_display(self, application):
         return application.get_status_display()
-
-    @admin.display(description="Revisar solicitud")
-    def review_actions(self, application):
-        approve_url = reverse(
-            "admin:applications_application_review_status",
-            args=(application.pk, ApplicationStatus.APPROVED),
-        )
-        reject_url = reverse(
-            "admin:applications_application_review_status",
-            args=(application.pk, ApplicationStatus.REJECTED),
-        )
-        return format_html(
-            '<span class="review-actions">'
-            '<a class="review-action review-action--approve" href="{}">Aprobar</a>'
-            '<a class="review-action review-action--reject" href="{}">Rechazar</a>'
-            "</span>",
-            approve_url,
-            reject_url,
-        )
 
     def _review_message(self, application, target_status):
         action_text = (

@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_top %}
+  {% if change and original %}
+    {% include "admin/applications/application/review_submit_row.html" %}
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
+
+{% block submit_buttons_bottom %}
+  {% if change and original %}
+    {% include "admin/applications/application/review_submit_row.html" %}
+  {% else %}
+    {{ block.super }}
+  {% endif %}
+{% endblock %}
