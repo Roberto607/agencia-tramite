@@ -153,8 +153,13 @@ function Footer() {
     <footer className="site-footer" id="contacto">
       <div className="footer-main">
         <div className="footer-intro">
-          <span className="footer-intro__eyebrow">LB&amp;A Consulter</span>
-          <h2>Agencia de trámites<br />y consultoría</h2>
+          <div className="footer-intro__brand">
+            <img src="/logo-lba.png" alt="Logo de LB&A Consulter" />
+            <div>
+              <span className="footer-intro__eyebrow">LB&amp;A Consulter</span>
+              <h2>Agencia de trámites<br />y consultoría</h2>
+            </div>
+          </div>
           <p>Atención y acompañamiento para tus gestiones.</p>
         </div>
         <div className="footer-contact">

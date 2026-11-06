@@ -644,7 +644,10 @@ export default function ApplicationPage() {
   return (
     <main className="application-page">
       <header className="application-page__header">
-        <a href="/" className="application-page__brand">LB&amp;A Consulter</a>
+        <a href="/" className="application-page__brand">
+          <img src="/logo-lba.png" alt="" />
+          <span>LB&amp;A Consulter</span>
+        </a>
         <a href="/" className="application-page__back">Volver al inicio</a>
       </header>
       <ApplicationForm />
