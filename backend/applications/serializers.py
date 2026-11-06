@@ -61,6 +61,7 @@ class ClientRegistrationSerializer(serializers.Serializer):
 class ApplicationSerializer(serializers.ModelSerializer):
     photo = serializers.ImageField(required=False, allow_null=True, write_only=True)
     selected_services = serializers.JSONField(required=False)
+    selected_options = serializers.JSONField(required=False)
     documents = serializers.ListField(
         child=serializers.FileField(),
         required=False,
@@ -81,6 +82,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "phone",
             "service_type",
             "selected_services",
+            "selected_options",
             "other_service",
             "photo",
             "created_at",
@@ -112,6 +114,33 @@ class ApplicationSerializer(serializers.ModelSerializer):
         selected_services = list(dict.fromkeys(selected_services))
         attrs["selected_services"] = selected_services
         attrs["service_type"] = selected_services[0]
+
+        selected_options = attrs.get("selected_options", [])
+        if not isinstance(selected_options, list) or any(
+            not isinstance(option, dict)
+            or not isinstance(option.get("service"), str)
+            or option["service"] not in selected_services
+            or any(
+                not isinstance(option.get(field), str)
+                for field in ("service_label", "group", "option", "time")
+            )
+            or (
+                option.get("price") is not None
+                and (
+                    not isinstance(option["price"], (int, float))
+                    or isinstance(option["price"], bool)
+                )
+            )
+            or (
+                option.get("currency") is not None
+                and not isinstance(option["currency"], str)
+            )
+            for option in selected_options
+        ):
+            raise serializers.ValidationError(
+                {"selected_options": "Las opciones deben corresponder a los trámites seleccionados."}
+            )
+        attrs["selected_options"] = selected_options
 
         request = self.context.get("request")
         if request is not None:

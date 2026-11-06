@@ -291,6 +291,12 @@ class ApplicationApiTests(APITestCase):
                 "identification_number": "123456789",
                 "email": "ana@example.com",
                 "selected_services": '["certificacion_nacimiento","traducciones_certificadas"]',
+                "selected_options": (
+                    '[{"service":"certificacion_nacimiento",'
+                    '"service_label":"Certificación de Nacimiento",'
+                    '"group":"Obtención","option":"Obtención",'
+                    '"time":"1–5 días","price":6000,"currency":"CUP"}]'
+                ),
             },
             format="multipart",
         )
@@ -306,6 +312,10 @@ class ApplicationApiTests(APITestCase):
             ["certificacion_nacimiento", "traducciones_certificadas"],
         )
         self.assertEqual(application.service_type, "certificacion_nacimiento")
+        self.assertEqual(
+            application.selected_options[0]["price"],
+            6000,
+        )
 
     def test_create_application_requires_details_when_other_service_is_selected(self):
         response = self.client.post(
@@ -337,6 +347,15 @@ class ApplicationApiTests(APITestCase):
             identification_number="123456789",
             email="ana@example.com",
             phone="+57 300 123 4567",
+            selected_options=[{
+                "service": "certificacion_nacimiento",
+                "service_label": "Certificación de Nacimiento",
+                "group": "Obtención",
+                "option": "Obtención",
+                "time": "1–5 días",
+                "price": 6000,
+                "currency": "CUP",
+            }],
         )
         document = ApplicationDocument.objects.create(
             application=application,
@@ -391,6 +410,9 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(detail, "nacimiento.jpg")
         self.assertContains(detail, "Fotografía")
         self.assertContains(detail, "Certificación de Nacimiento")
+        self.assertContains(detail, "Opciones, tiempos y precios seleccionados")
+        self.assertContains(detail, "6,000 CUP")
+        self.assertContains(detail, "Total estimado")
         self.assertContains(detail, "Aceptar solicitud")
         self.assertContains(detail, "Rechazar solicitud")
         self.assertContains(detail, "Eliminar")

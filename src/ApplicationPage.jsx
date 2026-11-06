@@ -12,22 +12,99 @@ import { useRef, useState } from 'react'
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const serviceCatalog = [
-  { value: 'certificacion_nacimiento', label: 'Certificación de Nacimiento' },
-  { value: 'certificacion_antecedentes_penales', label: 'Certificación de antecedentes penales' },
-  { value: 'certificacion_matrimonio_divorcio_solteria', label: 'Certificación de matrimonio, divorcio, Fe de soltería' },
-  { value: 'certificacion_viudez', label: 'Certificación de viudez' },
-  { value: 'certificacion_defuncion', label: 'Certificación de defunción' },
-  { value: 'titulos_estudio_certificacion_notas_plan_tematico', label: 'Títulos de estudio, certificación de notas y plan temático' },
-  { value: 'representacion_juridica', label: 'Representación jurídica (abogados)' },
-  { value: 'traducciones_certificadas', label: 'Traducciones certificadas' },
-  { value: 'apostillamiento_consulado', label: 'Apostillamiento Consulado' },
-  { value: 'asesoramiento_empresarial', label: 'Asesoramiento empresarial: Pymes, TCP, CNA y otros actores económicos' },
-  { value: 'otros', label: 'Otros' },
+  {
+    value: 'certificacion_nacimiento',
+    label: 'Certificación de Nacimiento',
+    pricingGroups: [
+      { id: 'obtencion', label: 'Obtención', options: [{ id: 'obtencion', label: 'Obtención', time: '1–5 días', price: 6000, currency: 'CUP' }] },
+      { id: 'legalizacion', label: 'Legalización', options: [
+        { id: 'express', label: 'Vía express', time: '15–20 días', price: 70, currency: 'USD' },
+        { id: 'lenta', label: 'Vía lenta', time: '30–45 días', price: 15000, currency: 'CUP' },
+      ] },
+    ],
+  },
+  {
+    value: 'certificacion_antecedentes_penales',
+    label: 'Certificación de antecedentes penales',
+    pricingGroups: [
+      { id: 'legalizacion', label: 'Legalización (incluye obtención)', options: [
+        { id: 'express', label: 'Vía express', time: '15–30 días', price: 80, currency: 'USD' },
+        { id: 'lenta', label: 'Vía lenta', time: '30–45 días', price: 25000, currency: 'CUP' },
+      ] },
+    ],
+  },
+  {
+    value: 'certificacion_matrimonio_divorcio_solteria',
+    label: 'Certificación de matrimonio, divorcio, Fe de soltería',
+    pricingGroups: [
+      { id: 'obtencion', label: 'Obtención', options: [{ id: 'obtencion', label: 'Obtención', time: '1–5 días', price: 7000, currency: 'CUP' }] },
+      { id: 'legalizacion', label: 'Legalización', options: [
+        { id: 'express', label: 'Vía express', time: '15–20 días', price: 70, currency: 'USD' },
+        { id: 'lenta', label: 'Vía lenta', time: '30–45 días', price: 15000, currency: 'CUP' },
+      ] },
+    ],
+  },
+  {
+    value: 'certificacion_viudez',
+    label: 'Certificación de viudez',
+    pricingGroups: [
+      { id: 'obtencion', label: 'Obtención', options: [{ id: 'obtencion', label: 'Obtención', time: '1–5 días', price: 6000, currency: 'CUP' }] },
+      { id: 'legalizacion', label: 'Legalización', options: [
+        { id: 'express', label: 'Vía express', time: '15–20 días', price: 70, currency: 'USD' },
+        { id: 'lenta', label: 'Vía lenta', time: '30–45 días', price: 15000, currency: 'CUP' },
+      ] },
+    ],
+  },
+  {
+    value: 'certificacion_defuncion',
+    label: 'Certificación de defunción',
+    pricingGroups: [
+      { id: 'obtencion', label: 'Obtención', options: [{ id: 'obtencion', label: 'Obtención', time: '1–10 días', price: 8000, currency: 'CUP' }] },
+      { id: 'legalizacion', label: 'Legalización', options: [
+        { id: 'express', label: 'Vía express', time: '15–20 días', price: 70, currency: 'USD' },
+        { id: 'lenta', label: 'Vía lenta', time: '30–45 días', price: 15000, currency: 'CUP' },
+      ] },
+    ],
+  },
+  {
+    value: 'titulos_estudio_certificacion_notas_plan_tematico',
+    label: 'Títulos de estudio, certificación de notas y plan temático',
+    pricingGroups: [
+      { id: 'obtencion', label: 'Obtención', options: [{ id: 'obtencion', label: 'Obtención', time: '1–30 días', price: null, currency: null }] },
+      { id: 'preuniversitario', label: 'Título preuniversitario o certificación de notas', options: [
+        { id: 'express', label: 'Vía express', time: '1–10 días', price: 150, currency: 'USD' },
+        { id: 'lenta', label: 'Vía lenta', time: '30–90 días', price: 20000, currency: 'CUP' },
+      ] },
+      { id: 'universitario', label: 'Título universitario o certificación de notas', options: [
+        { id: 'lenta', label: 'Vía lenta', time: '30–90 días', price: 25000, currency: 'CUP' },
+      ] },
+      { id: 'plan_tematico', label: 'Plan temático', options: [
+        { id: 'express', label: 'Vía express', time: '1–10 días', price: 250, currency: 'USD' },
+        { id: 'lenta', label: 'Vía lenta', time: '30–90 días', price: 35000, currency: 'CUP' },
+      ] },
+    ],
+  },
+  { value: 'representacion_juridica', label: 'Representación jurídica (abogados)', note: 'Tiempo y costo se informan al revisar tu consulta.' },
+  {
+    value: 'traducciones_certificadas',
+    label: 'Traducciones certificadas',
+    pricingGroups: [
+      { id: 'traduccion', label: 'Traducción certificada', options: [{ id: 'traduccion', label: 'Traducción certificada', time: '1–5 días', price: 30, currency: 'USD' }] },
+    ],
+  },
+  { value: 'apostillamiento_consulado', label: 'Apostillamiento Consulado', note: 'El tiempo y el costo dependen del consulado. Te brindaremos los detalles al contactarnos.' },
+  { value: 'asesoramiento_empresarial', label: 'Asesoramiento empresarial: Pymes, TCP, CNA y otros actores económicos', note: 'Tiempo y costo se informan al revisar tu consulta.' },
+  { value: 'otros', label: 'Otros', note: 'Te confirmaremos el tiempo y el costo según el trámite que necesitas.' },
 ]
 
 function formatFileSize(bytes) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function formatPrice(option) {
+  if (option.price == null || !option.currency) return 'Precio a consultar'
+  return `${new Intl.NumberFormat('es-CU').format(option.price)} ${option.currency}`
 }
 
 function ApplicationForm() {
@@ -45,11 +122,31 @@ function ApplicationForm() {
   })
   const [authToken, setAuthToken] = useState('')
   const [selectedServices, setSelectedServices] = useState([])
+  const [selectedPricingOptions, setSelectedPricingOptions] = useState({})
   const [serviceDocuments, setServiceDocuments] = useState({})
   const [applicationId, setApplicationId] = useState(null)
   const [submissionError, setSubmissionError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRefs = useRef({})
+  const selectedPricingDetails = serviceCatalog.flatMap((service) =>
+    (service.pricingGroups ?? []).flatMap((group) => {
+      const optionId = selectedPricingOptions[service.value]?.[group.id]
+      const option = group.options.find((item) => item.id === optionId)
+      return option ? [{
+        service: service.value,
+        service_label: service.label,
+        group: group.label,
+        option: option.label,
+        time: option.time,
+        price: option.price,
+        currency: option.currency,
+      }] : []
+    }),
+  )
+  const totals = selectedPricingDetails.reduce((result, option) => {
+    if (option.currency) result[option.currency] = (result[option.currency] ?? 0) + option.price
+    return result
+  }, {})
 
   function addServiceDocuments(service, fileType, event) {
     const selectedFiles = Array.from(event.currentTarget.files ?? [])
@@ -60,7 +157,7 @@ function ApplicationForm() {
         ...selectedFiles.map((file) => ({ id: crypto.randomUUID(), file, fileType })),
       ],
     }))
-    setSelectedServices((current) => current.includes(service) ? current : [...current, service])
+    if (!selectedServices.includes(service)) toggleService(service, true)
     event.currentTarget.value = ''
     setSubmissionError('')
   }
@@ -76,6 +173,21 @@ function ApplicationForm() {
     setSelectedServices((current) => isSelected
       ? [...current, service]
       : current.filter((selectedService) => selectedService !== service))
+    if (isSelected) {
+      const catalogEntry = serviceCatalog.find((item) => item.value === service)
+      const defaults = Object.fromEntries(
+        (catalogEntry?.pricingGroups ?? [])
+          .filter((group) => group.options.length === 1)
+          .map((group) => [group.id, group.options[0].id]),
+      )
+      setSelectedPricingOptions((current) => ({ ...current, [service]: defaults }))
+    } else {
+      setSelectedPricingOptions((current) => {
+        const remainingOptions = { ...current }
+        delete remainingOptions[service]
+        return remainingOptions
+      })
+    }
     if (!isSelected) {
       setServiceDocuments((current) => {
         const remainingDocuments = { ...current }
@@ -148,6 +260,16 @@ function ApplicationForm() {
       setSubmissionError('Selecciona al menos un trámite.')
       return
     }
+    const serviceMissingOptions = selectedServices.find((serviceValue) => {
+      const service = serviceCatalog.find((item) => item.value === serviceValue)
+      return service?.pricingGroups?.length
+        && !selectedPricingDetails.some((option) => option.service === serviceValue)
+    })
+    if (serviceMissingOptions) {
+      const service = serviceCatalog.find((item) => item.value === serviceMissingOptions)
+      setSubmissionError(`Selecciona al menos una opción para ${service?.label}.`)
+      return
+    }
 
     const formElement = event.currentTarget
     const formData = new FormData(formElement)
@@ -155,6 +277,7 @@ function ApplicationForm() {
       if (field !== 'password') formData.set(field, value)
     })
     formData.set('selected_services', JSON.stringify(selectedServices))
+    formData.set('selected_options', JSON.stringify(selectedPricingDetails))
     selectedServices.forEach((service) => {
       const documents = serviceDocuments[service] ?? []
       documents.forEach(({ file, fileType }) => {
@@ -305,7 +428,7 @@ function ApplicationForm() {
                 <legend>Selecciona los trámites que necesitas <span className="required-mark">*</span></legend>
                 <p className="service-selection__hint">Puedes marcar más de uno.</p>
                 <div className="service-selection__options">
-                  {serviceCatalog.map(({ value, label }) => {
+                  {serviceCatalog.map(({ value, label, pricingGroups, note }) => {
                     const isSelected = selectedServices.includes(value)
                     const documents = serviceDocuments[value] ?? []
                     const photoInputKey = `${value}-photo`
@@ -363,6 +486,30 @@ function ApplicationForm() {
                             </button>
                           </div>
                         </div>
+                        {isSelected && pricingGroups && (
+                          <div className="service-option__pricing">
+                            {pricingGroups.map((group) => (
+                              <label className="service-option__price-field" key={group.id}>
+                                <span>{group.label}</span>
+                                <select
+                                  onChange={(event) => setSelectedPricingOptions((current) => ({
+                                    ...current,
+                                    [value]: { ...current[value], [group.id]: event.target.value },
+                                  }))}
+                                  value={selectedPricingOptions[value]?.[group.id] ?? ''}
+                                >
+                                  <option value="">No incluir</option>
+                                  {group.options.map((option) => (
+                                    <option key={option.id} value={option.id}>
+                                      {option.label} · {option.time} · {formatPrice(option)}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        {isSelected && note && <p className="service-option__note">{note}</p>}
                         {documents.length > 0 && (
                           <ul className="service-option__files" aria-label={`Archivos para ${label}`}>
                             {documents.map(({ id, file, fileType }) => (
@@ -389,6 +536,42 @@ function ApplicationForm() {
                   })}
                 </div>
               </fieldset>
+
+              {selectedServices.length > 0 && (
+                <section className="service-summary form-field form-field--full" aria-label="Resumen de trámites seleccionados">
+                  <h3>Resumen de tu solicitud</h3>
+                  <ul>
+                    {selectedServices.map((serviceValue) => {
+                      const service = serviceCatalog.find((item) => item.value === serviceValue)
+                      const options = selectedPricingDetails.filter((item) => item.service === serviceValue)
+                      return (
+                        <li key={serviceValue}>
+                          <strong>{service?.label}</strong>
+                          {options.length > 0
+                            ? <ul>{options.map((option) => (
+                              <li key={`${option.group}-${option.option}`}>
+                                {option.group}: {option.option} · {option.time} · {formatPrice(option)}
+                              </li>
+                            ))}</ul>
+                            : <span>{service?.note ?? 'Selecciona las opciones de servicio que necesitas.'}</span>}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  <p className="service-summary__total">
+                    Total estimado: {totals.CUP ? `${new Intl.NumberFormat('es-CU').format(totals.CUP)} CUP` : ''}
+                    {totals.CUP && totals.USD ? ' + ' : ''}
+                    {totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : ''}
+                    {!totals.CUP && !totals.USD ? 'Pendiente de cotización' : ''}
+                  </p>
+                  {selectedServices.some((serviceValue) => serviceCatalog.find((item) => item.value === serviceValue)?.pricingGroups?.some((group) => group.options.some((option) => option.price == null))) && (
+                    <p className="service-summary__note">El total no incluye los conceptos marcados «Precio a consultar».</p>
+                  )}
+                  {selectedServices.some((serviceValue) => !serviceCatalog.find((item) => item.value === serviceValue)?.pricingGroups) && (
+                    <p className="service-summary__note">Algunos trámites requieren cotización personalizada.</p>
+                  )}
+                </section>
+              )}
 
               {selectedServices.includes('otros') && (
                 <label className="form-field form-field--full">
@@ -419,6 +602,32 @@ function ApplicationForm() {
             <CheckCircle2 size={35} aria-hidden="true" />
             <div>
               <h3>Tu consulta #{applicationId} será analizada en un plazo de 72 horas.</h3>
+              <p>Trámites solicitados:</p>
+              <ul className="application-complete__services">
+                {selectedServices.map((serviceValue) => {
+                  const service = serviceCatalog.find((item) => item.value === serviceValue)
+                  const options = selectedPricingDetails.filter((item) => item.service === serviceValue)
+                  return (
+                    <li key={serviceValue}>
+                      <strong>{service?.label}</strong>
+                      {options.length > 0
+                        ? <ul>{options.map((option) => (
+                          <li key={`${option.group}-${option.option}`}>
+                            {option.group}: {option.option} · {option.time} · {formatPrice(option)}
+                          </li>
+                        ))}</ul>
+                        : <span>{service?.note ?? 'Pendiente de cotización'}</span>}
+                    </li>
+                  )
+                })}
+              </ul>
+              <p className="application-complete__total">
+                Total estimado: {totals.CUP ? `${new Intl.NumberFormat('es-CU').format(totals.CUP)} CUP` : ''}
+                {totals.CUP && totals.USD ? ' + ' : ''}
+                {totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : ''}
+                {!totals.CUP && !totals.USD ? 'Pendiente de cotización' : ''}
+              </p>
+              <p>Los tiempos y precios pueden confirmarse al revisar tu solicitud.</p>
               <p>Si necesitas ayuda, puedes contactarnos por WhatsApp.</p>
               <a className="phone-contact__link" href="https://wa.me/5358049659" target="_blank" rel="noreferrer">
                 <MessageCircle size={17} aria-hidden="true" /> WhatsApp: +53 58049659

@@ -94,7 +94,7 @@ class ApplicationAdmin(admin.ModelAdmin):
     fieldsets = (
         ("Datos del solicitante", {"fields": ("first_names", "last_names", "identification_type", "identification_number")}),
         ("Contacto", {"fields": ("email", "phone")}),
-        ("Trámite", {"fields": ("service_types_display", "other_service")}),
+        ("Trámite", {"fields": ("service_types_display", "service_options_display", "service_options_total_display", "other_service")}),
         ("Estado de la solicitud", {"fields": ("status_display",)}),
         ("Registro", {"fields": ("created_at",)}),
     )
@@ -106,6 +106,8 @@ class ApplicationAdmin(admin.ModelAdmin):
         "email",
         "phone",
         "service_types_display",
+        "service_options_display",
+        "service_options_total_display",
         "other_service",
         "status_display",
         "created_at",
@@ -127,6 +129,45 @@ class ApplicationAdmin(admin.ModelAdmin):
         selected_services = application.selected_services or [application.service_type]
         labels = dict(Application._meta.get_field("service_type").choices)
         return ", ".join(labels.get(service, service) for service in selected_services)
+
+    @admin.display(description="Opciones, tiempos y precios seleccionados")
+    def service_options_display(self, application):
+        if not application.selected_options:
+            return "Sin opciones de precio registradas"
+
+        return format_html_join(
+            "<br>",
+            "{} — {} — {} — {}",
+            (
+                (
+                    option.get("service_label", option.get("service", "")),
+                    option.get("group", ""),
+                    option.get("option", ""),
+                    (
+                        f'{option.get("time", "")} · '
+                        f'{option["price"]:,} {option["currency"]}'
+                        if option.get("price") is not None and option.get("currency")
+                        else f'{option.get("time", "")} · Precio a consultar'
+                    ),
+                )
+                for option in application.selected_options
+            ),
+        )
+
+    @admin.display(description="Total estimado")
+    def service_options_total_display(self, application):
+        totals = {}
+        for option in application.selected_options:
+            amount = option.get("price")
+            currency = option.get("currency")
+            if isinstance(amount, (int, float)) and not isinstance(amount, bool) and currency:
+                totals[currency] = totals.get(currency, 0) + amount
+        if not totals:
+            return "Pendiente de cotización"
+        return " + ".join(
+            f"{amount:,.0f} {currency}"
+            for currency, amount in sorted(totals.items())
+        )
 
     @admin.display(description="Trámites solicitados")
     def service_types_summary(self, application):
