@@ -1,18 +1,14 @@
 import {
   ArrowRight,
   Check,
-  Facebook,
   Headset,
-  Instagram,
   LaptopMinimal,
   Mail,
   MessageCircle,
   MapPin,
   PhoneCall,
-  Linkedin,
   ShieldCheck,
   Zap,
-  Youtube,
   UserRound,
   Globe2,
   ClipboardCheck,
@@ -167,15 +163,6 @@ function Footer() {
           <a href="https://wa.me/5358049659" target="_blank" rel="noreferrer"><MessageCircle size={17} aria-hidden="true" /> +53 58049659</a>
           <a href="mailto:lbaconsulter@gmail.com"><Mail size={17} fill="currentColor" aria-hidden="true" /> lbaconsulter@gmail.com</a>
           <p><MapPin size={18} fill="currentColor" aria-hidden="true" /> Cra. 123 #45-67, Ciudad</p>
-        </div>
-        <div className="footer-social">
-          <h2>Síguenos</h2>
-          <div className="social-links">
-            <a href="https://www.facebook.com/" aria-label="Facebook" title="Facebook"><Facebook size={18} aria-hidden="true" /></a>
-            <a href="https://www.instagram.com/" aria-label="Instagram" title="Instagram"><Instagram size={18} aria-hidden="true" /></a>
-            <a href="https://www.youtube.com/" aria-label="YouTube" title="YouTube"><Youtube size={18} aria-hidden="true" /></a>
-            <a href="https://www.linkedin.com/" aria-label="LinkedIn" title="LinkedIn"><Linkedin size={18} aria-hidden="true" /></a>
-          </div>
         </div>
       </div>
       <div className="footer-bottom">
