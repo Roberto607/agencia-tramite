@@ -212,25 +212,10 @@ function ApplicationForm() {
     return result
   }
 
-  async function handleRegistration(event) {
+  function handleRegistration(event) {
     event.preventDefault()
     setSubmissionError('')
-    setIsSubmitting(true)
-
-    try {
-      const result = await getApiResult(await fetch(`${API_BASE_URL}/api/register/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(profile),
-      }))
-      setAuthToken(result.token)
-      setProfile((current) => ({ ...current, password: '' }))
-      setStep('services')
-    } catch (error) {
-      setSubmissionError(error instanceof Error ? error.message : 'No se pudo crear tu cuenta.')
-    } finally {
-      setIsSubmitting(false)
-    }
+    setStep('services')
   }
 
   async function handleLogin(event) {
@@ -289,9 +274,21 @@ function ApplicationForm() {
     setIsSubmitting(true)
 
     try {
+      let submissionToken = authToken
+      if (!submissionToken) {
+        const registration = await getApiResult(await fetch(`${API_BASE_URL}/api/register/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(profile),
+        }))
+        submissionToken = registration.token
+        setAuthToken(submissionToken)
+        setProfile((current) => ({ ...current, password: '' }))
+      }
+
       const result = await getApiResult(await fetch(`${API_BASE_URL}/api/applications/`, {
         method: 'POST',
-        headers: { Authorization: `Token ${authToken}` },
+        headers: { Authorization: `Token ${submissionToken}` },
         body: formData,
       }))
       setApplicationId(result.id)
@@ -322,7 +319,7 @@ function ApplicationForm() {
           <p>
             {step === 'register'
               ? authMode === 'register'
-                ? 'Regístrate para continuar con tu consulta.'
+                ? 'Completa tus datos. La cuenta se creará cuando envíes la solicitud.'
                 : 'Ingresa con el correo y la contraseña de tu cuenta.'
               : step === 'services'
                 ? 'Elige uno o más trámites y adjunta sus documentos.'
@@ -373,7 +370,7 @@ function ApplicationForm() {
             <div className="form-actions">
               <p><span className="required-mark">*</span> Campos obligatorios</p>
               <button className="primary-button" disabled={isSubmitting} type="submit">
-                {isSubmitting ? 'Creando cuenta...' : 'Registrarme y continuar'} <ArrowRight size={18} aria-hidden="true" />
+                Continuar a seleccionar trámites <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
             <p className="auth-switch">
@@ -590,7 +587,9 @@ function ApplicationForm() {
             <div className="form-actions">
               <p><span className="required-mark">*</span> Selecciona al menos un trámite.</p>
               <button className="primary-button" disabled={isSubmitting} type="submit">
-                {isSubmitting ? 'Enviando...' : 'Enviar solicitud'} <ArrowRight size={18} aria-hidden="true" />
+                {isSubmitting
+                  ? authToken ? 'Enviando solicitud...' : 'Creando cuenta y enviando...'
+                  : authToken ? 'Enviar solicitud' : 'Crear cuenta y enviar solicitud'} <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
             {submissionError && <p className="form-notice form-notice--error" role="alert">{submissionError}</p>}
