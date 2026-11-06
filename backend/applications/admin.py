@@ -136,8 +136,12 @@ class ApplicationAdmin(admin.ModelAdmin):
             return "Sin opciones de precio registradas"
 
         return format_html_join(
-            "<br>",
-            "{} — {} — {} — {}",
+            "",
+            '<div class="application-selected-option">'
+            "<strong>{}</strong>"
+            '<span>{}: {}</span>'
+            '<span class="application-selected-option__details">{}</span>'
+            "</div>",
             (
                 (
                     option.get("service_label", option.get("service", "")),
