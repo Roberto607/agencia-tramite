@@ -135,28 +135,47 @@ class ApplicationAdmin(admin.ModelAdmin):
         if not application.selected_options:
             return "Sin opciones de precio registradas"
 
-        return format_html_join(
-            "",
-            '<div class="application-selected-option">'
-            "<strong>{}</strong>"
-            '<span>{}: {}</span>'
-            '<span class="application-selected-option__details">{}</span>'
-            "</div>",
-            (
+        options_by_service = {}
+        for option in application.selected_options:
+            service_label = option.get("service_label", option.get("service", ""))
+            options_by_service.setdefault(service_label, []).append(option)
+
+        service_groups = []
+        for service_label, options in options_by_service.items():
+            rows = format_html_join(
+                "",
+                '<div class="application-selected-option__row">'
+                "<span>{}</span>"
+                '<span class="application-selected-option__details">{}</span>'
+                "</div>",
                 (
-                    option.get("service_label", option.get("service", "")),
-                    option.get("group", ""),
-                    option.get("option", ""),
                     (
-                        f'{option.get("time", "")} · '
-                        f'{option["price"]:,} {option["currency"]}'
-                        if option.get("price") is not None and option.get("currency")
-                        else f'{option.get("time", "")} · Precio a consultar'
-                    ),
+                        (
+                            option.get("group", "")
+                            if option.get("group") == option.get("option")
+                            else f'{option.get("group", "")}: {option.get("option", "")}'
+                        ),
+                        (
+                            f'{option.get("time", "")} · '
+                            f'{option["price"]:,} {option["currency"]}'
+                            if option.get("price") is not None and option.get("currency")
+                            else f'{option.get("time", "")} · Precio a consultar'
+                        ),
+                    )
+                    for option in options
+                ),
+            )
+            service_groups.append(
+                format_html(
+                    '<div class="application-selected-service">'
+                    '<strong class="application-selected-service__title">{}</strong>'
+                    '<div class="application-selected-service__rows">{}</div>'
+                    "</div>",
+                    service_label,
+                    rows,
                 )
-                for option in application.selected_options
-            ),
-        )
+            )
+        return format_html("{}", format_html_join("", "{}", ((group,) for group in service_groups)))
 
     @admin.display(description="Total estimado")
     def service_options_total_display(self, application):

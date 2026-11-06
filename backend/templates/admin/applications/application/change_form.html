@@ -3,27 +3,51 @@
 {% block extrastyle %}
   {{ block.super }}
   <style>
-    .application-selected-option {
-      display: grid;
-      gap: 3px;
+    .application-selected-service {
       margin: 0 0 10px;
-      padding: 9px 11px;
+      padding: 8px 11px;
       border-left: 3px solid #1260df;
       border-radius: 3px;
       background: #f5f8fd;
     }
 
-    .application-selected-option:last-child {
+    .application-selected-service:last-child {
       margin-bottom: 0;
     }
 
-    .application-selected-option strong {
+    .application-selected-service__title {
+      display: block;
+      margin-bottom: 5px;
       color: #0c2851;
+    }
+
+    .application-selected-option__row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 4px 0;
+      border-top: 1px solid #dce5f1;
     }
 
     .application-selected-option__details {
       color: #536780;
       font-size: 12px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 700px) {
+      .application-selected-option__row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .application-selected-option__details {
+        text-align: left;
+        white-space: normal;
+      }
     }
   </style>
 {% endblock %}

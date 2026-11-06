@@ -355,6 +355,14 @@ class ApplicationApiTests(APITestCase):
                 "time": "1–5 días",
                 "price": 6000,
                 "currency": "CUP",
+            }, {
+                "service": "certificacion_nacimiento",
+                "service_label": "Certificación de Nacimiento",
+                "group": "Legalización",
+                "option": "Vía express",
+                "time": "15–20 días",
+                "price": 70,
+                "currency": "USD",
             }],
         )
         document = ApplicationDocument.objects.create(
@@ -411,7 +419,13 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(detail, "Fotografía")
         self.assertContains(detail, "Certificación de Nacimiento")
         self.assertContains(detail, "Opciones, tiempos y precios seleccionados")
-        self.assertContains(detail, 'class="application-selected-option"', html=False)
+        self.assertContains(detail, 'class="application-selected-service__title"', html=False)
+        self.assertEqual(
+            detail.content.count(b'class="application-selected-option__row"'),
+            2,
+        )
+        self.assertContains(detail, "Legalización: Vía express")
+        self.assertNotContains(detail, "Obtención: Obtención")
         self.assertContains(detail, "6,000 CUP")
         self.assertNotContains(detail, "&lt;br&gt;", html=False)
         self.assertContains(detail, "Total estimado")
