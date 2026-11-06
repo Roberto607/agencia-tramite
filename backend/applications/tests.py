@@ -413,6 +413,7 @@ class ApplicationApiTests(APITestCase):
         self.assertNotContains(inbox, "Inicio", html=False)
         self.assertContains(inbox, "#0c2851", html=False)
         self.assertContains(inbox, 'id="user-tools"', html=False)
+        self.assertContains(inbox, 'src="/static/applications/logo-lba.png"', html=False)
         self.assertEqual(detail.status_code, status.HTTP_200_OK)
         self.assertContains(detail, "soporte.pdf")
         self.assertContains(detail, "nacimiento.jpg")

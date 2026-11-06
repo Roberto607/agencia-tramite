@@ -9,7 +9,12 @@
 {% endblock %}
 
 {% block branding %}
-<div id="site-name"><a href="{% url 'admin:index' %}">LB&amp;A Consulter</a></div>
+<div id="site-name">
+  <a href="{% url 'admin:index' %}">
+    <img src="{% static 'applications/logo-lba.png' %}" alt="">
+    <span>LB&amp;A Consulter</span>
+  </a>
+</div>
 {% endblock %}
 
 {% block nav-breadcrumbs %}{% endblock %}
@@ -51,8 +56,17 @@
   }
 
   #site-name a {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
     color: #fff !important;
     font-weight: 800;
+  }
+
+  #site-name img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
   }
 
   #user-tools,
