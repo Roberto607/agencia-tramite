@@ -1,0 +1,10 @@
+{% load i18n admin_urls %}
+<div class="submit-row">
+  {% if has_change_permission and not add %}
+    <input type="submit" value="Guardar permisos" class="default" name="_save">
+  {% endif %}
+  {% if show_delete_link and original %}
+    {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
+    <a href="{% add_preserved_filters delete_url %}" class="deletelink">{% translate "Delete" %}</a>
+  {% endif %}
+</div>

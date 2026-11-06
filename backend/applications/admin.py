@@ -569,7 +569,7 @@ admin.site.unregister(Group)
 class CompactUserAdmin(UserAdmin):
     change_form_template = "admin/auth/user/change_form.html"
     fieldsets = (
-        ("Acceso", {"fields": ("username", "password")}),
+        ("Acceso", {"fields": ("username", "password_change_link")}),
         ("Datos básicos", {"fields": ("first_name", "last_name", "email")}),
         (
             "Permisos de acceso",
@@ -587,19 +587,22 @@ class CompactUserAdmin(UserAdmin):
     )
     readonly_fields = (
         "username",
-        "password",
         "first_name",
         "last_name",
         "email",
-        "is_active",
-        "is_staff",
-        "is_superuser",
-        "groups",
+        "password_change_link",
         "applications_link",
-        "user_permissions",
         "last_login",
         "date_joined",
     )
+
+    @admin.display(description="Contraseña")
+    def password_change_link(self, user):
+        url = reverse("admin:auth_user_password_change", args=(user.pk,))
+        return format_html(
+            '<a class="button" href="{}">Cambiar contraseña</a>',
+            url,
+        )
 
     @admin.display(description="Solicitudes del usuario")
     def applications_link(self, user):

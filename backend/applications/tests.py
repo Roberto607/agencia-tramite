@@ -287,6 +287,8 @@ class ApplicationApiTests(APITestCase):
         response = self.client.get(
             reverse("admin:auth_user_change", args=(user.pk,))
         )
+        password_url = reverse("admin:auth_user_password_change", args=(user.pk,))
+        password_page = self.client.get(password_url)
         applications_url = (
             f'{reverse("admin:applications_application_changelist")}'
             f"?user__id__exact={user.pk}"
@@ -300,11 +302,20 @@ class ApplicationApiTests(APITestCase):
         self.assertContains(response, "Actividad")
         self.assertContains(response, "Ver trámites de este usuario")
         self.assertContains(response, applications_url, html=False)
-        self.assertNotContains(response, 'name="_save"', html=False)
+        self.assertContains(response, "Cambiar contraseña")
+        self.assertContains(response, password_url, html=False)
+        self.assertContains(response, 'name="is_active"', html=False)
+        self.assertContains(response, 'name="is_staff"', html=False)
+        self.assertContains(response, 'name="is_superuser"', html=False)
+        self.assertContains(response, 'name="groups"', html=False)
+        self.assertContains(response, 'name="user_permissions"', html=False)
+        self.assertContains(response, 'name="_save"', html=False)
+        self.assertContains(response, "Guardar permisos")
         self.assertNotContains(response, 'name="_continue"', html=False)
         self.assertNotContains(response, 'name="_addanother"', html=False)
         self.assertNotContains(response, 'name="_saveasnew"', html=False)
         self.assertContains(response, "collapse")
+        self.assertEqual(password_page.status_code, status.HTTP_200_OK)
         self.assertEqual(
             user_applications.status_code,
             status.HTTP_200_OK,
@@ -313,6 +324,32 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(user_applications.context["cl"].result_count, 1)
         self.assertContains(user_applications, f"#{matching_application.pk}")
         self.assertNotContains(user_applications, "Other Applicant")
+
+        updated_user = self.client.post(
+            reverse("admin:auth_user_change", args=(user.pk,)),
+            {
+                "is_active": "on",
+                "is_staff": "on",
+                "is_superuser": "on",
+                "_save": "Guardar permisos",
+            },
+        )
+        self.assertEqual(updated_user.status_code, status.HTTP_302_FOUND)
+        user.refresh_from_db()
+        self.assertTrue(user.is_active)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+
+        changed_password = self.client.post(
+            password_url,
+            {
+                "password1": "New-Strong-Admin-Password-932!",
+                "password2": "New-Strong-Admin-Password-932!",
+            },
+        )
+        self.assertEqual(changed_password.status_code, status.HTTP_302_FOUND)
+        user.refresh_from_db()
+        self.assertTrue(user.check_password("New-Strong-Admin-Password-932!"))
 
     def test_create_application_with_multiple_documents(self):
         documents = [
