@@ -115,8 +115,15 @@ class ApplicationAdmin(admin.ModelAdmin):
         "created_at",
     )
 
+    def lookup_allowed(self, lookup, value, request=None):
+        if lookup == "user__id__exact":
+            return value.isdecimal()
+        return super().lookup_allowed(lookup, value, request)
+
     def get_queryset(self, request):
-        return super().get_queryset(request).annotate(document_total=Count("documents", distinct=True))
+        return super().get_queryset(request).annotate(
+            document_total=Count("documents", distinct=True)
+        )
 
     @admin.display(description="Solicitante")
     def full_name(self, application):
@@ -560,6 +567,7 @@ admin.site.unregister(Group)
 
 
 class CompactUserAdmin(UserAdmin):
+    change_form_template = "admin/auth/user/change_form.html"
     fieldsets = (
         ("Acceso", {"fields": ("username", "password")}),
         ("Datos básicos", {"fields": ("first_name", "last_name", "email")}),
@@ -567,6 +575,7 @@ class CompactUserAdmin(UserAdmin):
             "Permisos de acceso",
             {"fields": ("is_active", "is_staff", "is_superuser", "groups")},
         ),
+        ("Trámites", {"fields": ("applications_link",)}),
         (
             "Permisos específicos",
             {"classes": ("collapse",), "fields": ("user_permissions",)},
@@ -576,6 +585,31 @@ class CompactUserAdmin(UserAdmin):
             {"classes": ("collapse",), "fields": ("last_login", "date_joined")},
         ),
     )
+    readonly_fields = (
+        "username",
+        "password",
+        "first_name",
+        "last_name",
+        "email",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "groups",
+        "applications_link",
+        "user_permissions",
+        "last_login",
+        "date_joined",
+    )
+
+    @admin.display(description="Solicitudes del usuario")
+    def applications_link(self, user):
+        url = reverse("admin:applications_application_changelist")
+        query = urlencode({"user__id__exact": user.pk})
+        return format_html(
+            '<a class="button" href="{}?{}">Ver trámites de este usuario</a>',
+            url,
+            query,
+        )
 
 
 User = get_user_model()

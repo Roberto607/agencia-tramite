@@ -267,21 +267,52 @@ class ApplicationApiTests(APITestCase):
             "staff-member@example.com",
             "staff-member-password",
         )
+        matching_application = Application.objects.create(
+            user=user,
+            first_names="Staff",
+            last_names="Member",
+            identification_type="cedula",
+            identification_number="11111111",
+            email=user.email,
+        )
+        Application.objects.create(
+            first_names="Other",
+            last_names="Applicant",
+            identification_type="cedula",
+            identification_number="22222222",
+            email="other@example.com",
+        )
         self.client.force_login(admin_user)
 
         response = self.client.get(
             reverse("admin:auth_user_change", args=(user.pk,))
         )
+        applications_url = (
+            f'{reverse("admin:applications_application_changelist")}'
+            f"?user__id__exact={user.pk}"
+        )
+        user_applications = self.client.get(applications_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertContains(response, "Datos básicos")
         self.assertContains(response, "Permisos de acceso")
         self.assertContains(response, "Permisos específicos")
         self.assertContains(response, "Actividad")
-        self.assertContains(response, 'name="is_superuser"', html=False)
-        self.assertContains(response, 'name="groups"', html=False)
-        self.assertContains(response, 'name="user_permissions"', html=False)
+        self.assertContains(response, "Ver trámites de este usuario")
+        self.assertContains(response, applications_url, html=False)
+        self.assertNotContains(response, 'name="_save"', html=False)
+        self.assertNotContains(response, 'name="_continue"', html=False)
+        self.assertNotContains(response, 'name="_addanother"', html=False)
+        self.assertNotContains(response, 'name="_saveasnew"', html=False)
         self.assertContains(response, "collapse")
+        self.assertEqual(
+            user_applications.status_code,
+            status.HTTP_200_OK,
+            user_applications.headers.get("Location"),
+        )
+        self.assertEqual(user_applications.context["cl"].result_count, 1)
+        self.assertContains(user_applications, f"#{matching_application.pk}")
+        self.assertNotContains(user_applications, "Other Applicant")
 
     def test_create_application_with_multiple_documents(self):
         documents = [
