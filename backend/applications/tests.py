@@ -289,9 +289,9 @@ class ApplicationApiTests(APITestCase):
         )
         password_url = reverse("admin:auth_user_password_change", args=(user.pk,))
         password_page = self.client.get(password_url)
-        applications_url = (
-            f'{reverse("admin:applications_application_changelist")}'
-            f"?user__id__exact={user.pk}"
+        applications_url = reverse(
+            "admin:auth_user_applications",
+            args=(user.pk,),
         )
         user_applications = self.client.get(applications_url)
 
@@ -321,9 +321,12 @@ class ApplicationApiTests(APITestCase):
             status.HTTP_200_OK,
             user_applications.headers.get("Location"),
         )
-        self.assertEqual(user_applications.context["cl"].result_count, 1)
+        self.assertContains(user_applications, "Solicitudes registradas para")
+        self.assertContains(user_applications, 'id="user-applications"', html=False)
+        self.assertEqual(len(user_applications.context["application_rows"]), 1)
         self.assertContains(user_applications, f"#{matching_application.pk}")
         self.assertNotContains(user_applications, "Other Applicant")
+        self.assertNotContains(user_applications, 'id="changelist-search"', html=False)
 
         updated_user = self.client.post(
             reverse("admin:auth_user_change", args=(user.pk,)),

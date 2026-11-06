@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <div id="content-main">
+    <h1>{{ title }}</h1>
+    <p>Solicitudes registradas para {{ user_account.get_full_name|default:user_account.username }}.</p>
+    <p><a class="button" href="{{ user_change_url }}">Volver al usuario</a></p>
+
+    {% if application_rows %}
+      <div class="results">
+        <table id="user-applications">
+          <thead>
+            <tr>
+              <th>Solicitud</th>
+              <th>Trámites</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Detalle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in application_rows %}
+              <tr>
+                <th scope="row">#{{ row.application.pk }}</th>
+                <td>{{ row.services }}</td>
+                <td>{{ row.application.get_status_display }}</td>
+                <td>{{ row.application.created_at|date:"d/m/Y H:i" }}</td>
+                <td><a href="{{ row.detail_url }}">Ver solicitud</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if page_obj.has_other_pages %}
+        <p class="paginator">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+          {% endif %}
+          Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+          {% endif %}
+        </p>
+      {% endif %}
+    {% else %}
+      <p>Este usuario todavía no tiene trámites registrados.</p>
+    {% endif %}
+  </div>
+{% endblock %}

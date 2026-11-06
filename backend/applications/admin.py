@@ -10,6 +10,7 @@ from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count, Q, TextField
 from django.db.models.functions import Cast
+from django.core.paginator import Paginator
 from django.http import (
     FileResponse,
     Http404,
@@ -596,6 +597,63 @@ class CompactUserAdmin(UserAdmin):
         "date_joined",
     )
 
+    def get_urls(self):
+        custom_urls = [
+            path(
+                "<int:object_id>/applications/",
+                self.admin_site.admin_view(self.user_applications_view),
+                name="auth_user_applications",
+            ),
+        ]
+        return custom_urls + super().get_urls()
+
+    def user_applications_view(self, request, object_id):
+        user = get_object_or_404(self.get_queryset(request), pk=object_id)
+        if not self.has_view_or_change_permission(request, user):
+            raise PermissionDenied
+
+        application_admin = self.admin_site._registry[Application]
+        if not application_admin.has_view_or_change_permission(request):
+            raise PermissionDenied
+
+        applications = application_admin.get_queryset(request).filter(user=user)
+        paginator = Paginator(applications, application_admin.list_per_page)
+        page_obj = paginator.get_page(request.GET.get("page"))
+        service_labels = dict(Application._meta.get_field("service_type").choices)
+        application_rows = [
+            {
+                "application": application,
+                "services": ", ".join(
+                    service_labels.get(service, service)
+                    for service in (
+                        application.selected_services or [application.service_type]
+                    )
+                ),
+                "detail_url": reverse(
+                    "admin:applications_application_change",
+                    args=(application.pk,),
+                ),
+            }
+            for application in page_obj.object_list
+        ]
+        context = {
+            **self.admin_site.each_context(request),
+            "title": f"Trámites de {user.get_full_name() or user.get_username()}",
+            "user_account": user,
+            "application_rows": application_rows,
+            "page_obj": page_obj,
+            "opts": self.model._meta,
+            "user_change_url": reverse(
+                "admin:auth_user_change",
+                args=(user.pk,),
+            ),
+        }
+        return TemplateResponse(
+            request,
+            "admin/auth/user/applications.html",
+            context,
+        )
+
     @admin.display(description="Contraseña")
     def password_change_link(self, user):
         url = reverse("admin:auth_user_password_change", args=(user.pk,))
@@ -606,12 +664,10 @@ class CompactUserAdmin(UserAdmin):
 
     @admin.display(description="Solicitudes del usuario")
     def applications_link(self, user):
-        url = reverse("admin:applications_application_changelist")
-        query = urlencode({"user__id__exact": user.pk})
+        url = reverse("admin:auth_user_applications", args=(user.pk,))
         return format_html(
-            '<a class="button" href="{}?{}">Ver trámites de este usuario</a>',
+            '<a class="button" href="{}">Ver trámites de este usuario</a>',
             url,
-            query,
         )
 
 
