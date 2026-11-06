@@ -256,6 +256,33 @@ class ApplicationApiTests(APITestCase):
         self.assertNotContains(response, 'aria-label="Breadcrumbs"', html=False)
         self.assertContains(response, 'id="login-form"', html=False)
 
+    def test_admin_user_permissions_form_is_compact_and_keeps_all_access_controls(self):
+        admin_user = get_user_model().objects.create_superuser(
+            "compact-user-admin",
+            "compact-user-admin@example.com",
+            "compact-user-admin-password",
+        )
+        user = get_user_model().objects.create_user(
+            "staff-member",
+            "staff-member@example.com",
+            "staff-member-password",
+        )
+        self.client.force_login(admin_user)
+
+        response = self.client.get(
+            reverse("admin:auth_user_change", args=(user.pk,))
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, "Datos básicos")
+        self.assertContains(response, "Permisos de acceso")
+        self.assertContains(response, "Permisos específicos")
+        self.assertContains(response, "Actividad")
+        self.assertContains(response, 'name="is_superuser"', html=False)
+        self.assertContains(response, 'name="groups"', html=False)
+        self.assertContains(response, 'name="user_permissions"', html=False)
+        self.assertContains(response, "collapse")
+
     def test_create_application_with_multiple_documents(self):
         documents = [
             SimpleUploadedFile("identificacion.pdf", b"pdf contents", content_type="application/pdf"),

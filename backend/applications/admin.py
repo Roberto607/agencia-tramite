@@ -3,6 +3,8 @@ from urllib.parse import urlencode
 from pathlib import Path
 
 from django.contrib import admin
+from django.contrib.auth import get_user_model
+from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
@@ -555,3 +557,27 @@ admin.site.site_header = "LB&A Consulter"
 admin.site.site_title = "Administración de LB&A Consulter"
 admin.site.index_title = "Bandeja de solicitudes"
 admin.site.unregister(Group)
+
+
+class CompactUserAdmin(UserAdmin):
+    fieldsets = (
+        ("Acceso", {"fields": ("username", "password")}),
+        ("Datos básicos", {"fields": ("first_name", "last_name", "email")}),
+        (
+            "Permisos de acceso",
+            {"fields": ("is_active", "is_staff", "is_superuser", "groups")},
+        ),
+        (
+            "Permisos específicos",
+            {"classes": ("collapse",), "fields": ("user_permissions",)},
+        ),
+        (
+            "Actividad",
+            {"classes": ("collapse",), "fields": ("last_login", "date_joined")},
+        ),
+    )
+
+
+User = get_user_model()
+admin.site.unregister(User)
+admin.site.register(User, CompactUserAdmin)
