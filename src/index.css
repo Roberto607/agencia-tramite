@@ -80,7 +80,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .application-page { min-height: 100vh; background: #f3f7fc; }
 .application-page__header { min-height: 76px; padding: 0 max(24px, calc((100% - 980px) / 2)); display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid rgba(255, 255, 255, .16); background: #102f5c; }
 .application-page__brand { display: inline-flex; align-items: center; gap: 12px; color: #fff; font-size: 20px; font-weight: 800; }
-.application-page__brand img { width: 52px; height: 52px; border: 2px solid rgba(255, 255, 255, .72); border-radius: 50%; object-fit: cover; box-shadow: 0 3px 12px rgba(0, 0, 0, .2); }
+.application-page__brand img { width: 52px; height: 52px; border: 0; border-radius: 50%; object-fit: cover; box-shadow: none; }
 .application-page__back { color: rgba(255, 255, 255, .9); font-size: 14px; font-weight: 700; }
 .application-page__back:hover { color: #fff; text-decoration: underline; }
 .application-section { padding: 66px 0 76px; background: #f3f7fc; scroll-margin-top: 16px; animation: section-enter 650ms cubic-bezier(.2, .7, .2, 1) 180ms both; }
