@@ -105,12 +105,16 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .application-complete__services > li { margin: 0 0 8px; }
 .application-complete__services ul { margin: 3px 0 0; padding-left: 20px; }
 .application-complete__total { font-weight: 800; }
-.account-created { display: flex; align-items: flex-start; gap: 16px; border-left: 5px solid #27834b; background: linear-gradient(135deg, #f3fbf6, #eaf7ef); color: #215e3b; }
-.account-created > svg { flex: 0 0 auto; color: #27834b; }
-.account-created__content h3 { margin: 0 0 8px; color: #174b2d; font-size: 19px; line-height: 1.4; }
+.account-created { display: flex; align-items: flex-start; gap: 17px; border: 1px solid #b7dfc5; border-left: 5px solid #27834b; border-radius: 12px; background: linear-gradient(135deg, #f5fcf7, #eaf7ef); box-shadow: 0 14px 35px rgba(23, 94, 55, .1); color: #215e3b; }
+.account-created__icon { width: 52px; height: 52px; flex: 0 0 52px; display: grid; place-items: center; border-radius: 50%; background: #d7f2e0; color: #218046; }
+.account-created__eyebrow { display: inline-block; margin: 0 0 5px; color: #27834b; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.account-created__content h3 { margin: 0 0 8px; color: #174b2d; font-size: 20px; line-height: 1.4; }
 .account-created__content p { margin: 0; color: #3d674d; font-size: 14px; line-height: 1.6; }
-.account-created__actions { margin-top: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
-.account-created__later { color: #315d40; font-size: 13px; font-weight: 700; text-decoration: underline; }
+.account-created__actions { margin-top: 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.account-created__actions .primary-button { border: 0; cursor: pointer; }
+.account-created__cancel { min-height: 46px; padding: 0 22px; border: 1px solid #b8c7bb; border-radius: 999px; background: #fff; color: #315d40; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 150ms ease, border-color 150ms ease; }
+.account-created__cancel:hover { border-color: #8eb69b; background: #f3faf5; }
+.account-created__cancel:focus-visible { outline: 2px solid #27834b; outline-offset: 3px; }
 .service-documents { padding-top: 15px; border-top: 1px solid #e5ebf3; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 23px 20px; }
 .form-field { min-width: 0; display: flex; flex-direction: column; gap: 9px; color: #152f53; font-size: 13px; font-weight: 700; animation: section-enter 400ms ease-out 260ms both; }
@@ -278,6 +282,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .application-inner { width: calc(100% - 36px); }
   .application-heading h2 { font-size: 28px; }
   .application-form { padding: 23px 18px; }
+  .account-created { gap: 12px; }
+  .account-created__icon { width: 42px; height: 42px; flex-basis: 42px; }
+  .account-created__actions { align-items: stretch; flex-direction: column; }
+  .account-created__actions .primary-button, .account-created__cancel { width: 100%; }
   .form-grid { grid-template-columns: 1fr; gap: 18px; }
   .form-field--full { grid-column: auto; }
   .service-selection__options { grid-template-columns: 1fr; gap: 8px; }

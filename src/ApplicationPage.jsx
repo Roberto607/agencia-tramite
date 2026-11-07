@@ -406,7 +406,7 @@ function ApplicationForm() {
             <div className="form-actions">
               <p><span className="required-mark">*</span> Campos obligatorios</p>
               <button className="primary-button" disabled={isSubmitting} type="submit">
-                {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta y continuar'} <ArrowRight size={18} aria-hidden="true" />
+                {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'} <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
             <p className="auth-switch">
@@ -469,15 +469,28 @@ function ApplicationForm() {
 
         {step === 'registered' && (
           <div className="application-form account-created" role="status">
-            <CheckCircle2 size={38} aria-hidden="true" />
+            <span className="account-created__icon"><CheckCircle2 size={30} aria-hidden="true" /></span>
             <div className="account-created__content">
-              <h3>Tu cuenta se creó correctamente.</h3>
-              <p>No tienes que completar una solicitud ahora. Cuando quieras, podrás iniciar sesión y seleccionar los trámites que necesitas.</p>
+              <span className="account-created__eyebrow">Registro completado</span>
+              <h3>¡Tu cuenta se creó correctamente!</h3>
+              <p>Puedes continuar con tu trámite ahora o cancelarlo y volver más adelante iniciando sesión con tu cuenta.</p>
               <div className="account-created__actions">
                 <button className="primary-button" onClick={() => setStep('services')} type="button">
-                  Seleccionar trámites ahora <ArrowRight size={18} aria-hidden="true" />
+                  Continuar trámite <ArrowRight size={18} aria-hidden="true" />
                 </button>
-                <a className="account-created__later" href="/">Lo haré después</a>
+                <button
+                  className="account-created__cancel"
+                  onClick={() => {
+                    setAuthToken('')
+                    setLoginCredentials({ email: profile.email, password: '' })
+                    setAuthMode('login')
+                    setStep('register')
+                    setSubmissionError('')
+                  }}
+                  type="button"
+                >
+                  Cancelar
+                </button>
               </div>
             </div>
           </div>
