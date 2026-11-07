@@ -9,7 +9,7 @@ import {
   MessageCircle,
   Trash2,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const countries = [
@@ -309,104 +309,29 @@ function formatPrice(option) {
 }
 
 function CountrySearch({ value, onChange }) {
-  const [query, setQuery] = useState(value)
-  const [isOpen, setIsOpen] = useState(false)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const inputRef = useRef(null)
-  const listId = 'registration-country-options'
-  const normalizedQuery = query.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase()
-  const filteredCountries = countries.filter((country) =>
-    country.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().includes(normalizedQuery),
-  )
-
-  useEffect(() => {
-    if (value) setQuery(value)
-  }, [value])
-
-  useEffect(() => {
-    inputRef.current?.setCustomValidity(
-      query && (!value || query !== value) ? 'Selecciona un país de la lista.' : '',
-    )
-  }, [query, value])
-
-  function chooseCountry(country) {
-    setQuery(country)
-    onChange(country)
-    inputRef.current?.setCustomValidity('')
-    setActiveIndex(0)
-    setIsOpen(false)
-  }
-
-  function handleKeyDown(event) {
-    if (event.key === 'ArrowDown') {
-      event.preventDefault()
-      setIsOpen(true)
-      if (filteredCountries.length) {
-        setActiveIndex((index) => Math.min(index + 1, filteredCountries.length - 1))
-      }
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault()
-      setIsOpen(true)
-      if (filteredCountries.length) {
-        setActiveIndex((index) => Math.max(index - 1, 0))
-      }
-    } else if (event.key === 'Enter' && isOpen && filteredCountries[activeIndex]) {
-      event.preventDefault()
-      chooseCountry(filteredCountries[activeIndex])
-    } else if (event.key === 'Escape') {
-      setIsOpen(false)
-    }
-  }
-
   return (
-    <div
-      className="country-search"
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false)
-      }}
-    >
+    <div className="country-search">
       <input
-        aria-activedescendant={isOpen && filteredCountries[activeIndex] ? `country-option-${activeIndex}` : undefined}
-        aria-autocomplete="list"
-        aria-controls={listId}
-        aria-expanded={isOpen}
+        aria-describedby="registration-country-hint"
         autoComplete="country-name"
         id="registration-country"
+        list="registration-country-options"
         name="country"
         onChange={(event) => {
-          setQuery(event.target.value)
-          event.currentTarget.setCustomValidity(event.target.value ? 'Selecciona un país de la lista.' : '')
-          onChange('')
-          setActiveIndex(0)
-          setIsOpen(true)
+          const country = event.target.value
+          event.currentTarget.setCustomValidity(
+            country && !countries.includes(country) ? 'Selecciona un país de las sugerencias.' : '',
+          )
+          onChange(country)
         }}
-        onFocus={() => setIsOpen(true)}
-        onKeyDown={handleKeyDown}
-        placeholder="Busca o selecciona tu país"
-        ref={inputRef}
+        placeholder="Escribe para buscar tu país"
         required
-        role="combobox"
-        value={query}
+        value={value}
       />
-      {isOpen && (
-        <ul className="country-search__options" id={listId} role="listbox">
-          {filteredCountries.length > 0
-            ? filteredCountries.map((country, index) => (
-              <li
-                aria-selected={value === country}
-                className={index === activeIndex ? 'country-search__option country-search__option--active' : 'country-search__option'}
-                id={`country-option-${index}`}
-                key={country}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={() => chooseCountry(country)}
-                role="option"
-              >
-                {country}
-              </li>
-            ))
-            : <li className="country-search__empty" role="presentation">No se encontraron países.</li>}
-        </ul>
-      )}
+      <datalist id="registration-country-options">
+        {countries.map((country) => <option key={country} value={country} />)}
+      </datalist>
+      <span className="field-hint" id="registration-country-hint">Escribe y borra normalmente; selecciona una sugerencia para completar el país.</span>
     </div>
   )
 }
