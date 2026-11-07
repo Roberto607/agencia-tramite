@@ -36,7 +36,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .hero__image { position: absolute; inset: 0; background-image: linear-gradient(90deg, rgba(8, 34, 72, .97) 0%, rgba(9, 38, 79, .9) 34%, rgba(9, 38, 79, .45) 59%, rgba(9, 38, 79, .03) 100%), url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=2200&q=85'); background-size: cover; background-position: center 54%; }
 .hero__content { position: relative; width: min(100% - 64px, 1440px); margin: 0 auto; padding: 40px 0 43px; display: flex; align-items: center; justify-content: space-between; gap: 36px; }
 .hero__copy { min-width: 0; max-width: 800px; flex: 1; }
-.hero__brand-mark { position: relative; isolation: isolate; width: clamp(220px, 27vw, 370px); flex: 0 0 auto; display: grid; place-items: center; }
+.hero__brand-mark { position: relative; isolation: isolate; width: clamp(190px, 23vw, 320px); flex: 0 0 auto; display: grid; place-items: center; }
 .hero__brand-mark::before { content: ''; position: absolute; z-index: 0; inset: 5%; border-radius: 50%; background: radial-gradient(circle, rgba(0, 132, 255, .74) 0%, rgba(0, 105, 255, .42) 48%, rgba(0, 85, 255, 0) 74%); filter: blur(24px); }
 .hero__brand-mark::after { content: ''; position: absolute; z-index: 2; width: 137%; height: 38%; border: 3px solid rgba(124, 218, 255, .96); border-right-color: rgba(124, 218, 255, .22); border-bottom-color: rgba(124, 218, 255, .5); border-radius: 50%; box-shadow: 0 0 12px rgba(44, 168, 255, .8), 0 0 32px rgba(44, 168, 255, .5), inset 0 0 12px rgba(44, 168, 255, .28); transform: rotate(-24deg); pointer-events: none; }
 .hero__brand-mark img { position: relative; z-index: 1; display: block; width: 100%; height: auto; filter: drop-shadow(0 0 28px rgba(35, 155, 255, .82)) drop-shadow(0 18px 32px rgba(0, 0, 0, .3)); }
@@ -253,7 +253,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .hero__image { background-image: linear-gradient(90deg, rgba(8, 34, 72, .94), rgba(9, 38, 79, .72)), url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80'); background-position: center; }
   .hero__content { width: calc(100% - 40px); padding: 44px 0 50px; }
   .hero__content { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; }
-  .hero__brand-mark { width: min(48vw, 210px); align-self: flex-end; margin-top: -28px; }
+  .hero__brand-mark { width: min(42vw, 185px); align-self: flex-end; margin-top: -28px; }
   .hero__badge { font-size: 12px; }
   .hero h1 { margin-top: 18px; font-size: clamp(39px, 10vw, 56px); }
   .hero__action { width: 100%; margin-top: 23px; }
