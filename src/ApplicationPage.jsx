@@ -9,7 +9,7 @@ import {
   MessageCircle,
   Trash2,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 const countries = [
@@ -306,6 +306,109 @@ function formatFileSize(bytes) {
 function formatPrice(option) {
   if (option.price == null || !option.currency) return 'Precio a consultar'
   return `${new Intl.NumberFormat('es-CU').format(option.price)} ${option.currency}`
+}
+
+function CountrySearch({ value, onChange }) {
+  const [query, setQuery] = useState(value)
+  const [isOpen, setIsOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const inputRef = useRef(null)
+  const listId = 'registration-country-options'
+  const normalizedQuery = query.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase()
+  const filteredCountries = countries.filter((country) =>
+    country.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().includes(normalizedQuery),
+  )
+
+  useEffect(() => {
+    if (value) setQuery(value)
+  }, [value])
+
+  useEffect(() => {
+    inputRef.current?.setCustomValidity(
+      query && (!value || query !== value) ? 'Selecciona un país de la lista.' : '',
+    )
+  }, [query, value])
+
+  function chooseCountry(country) {
+    setQuery(country)
+    onChange(country)
+    inputRef.current?.setCustomValidity('')
+    setActiveIndex(0)
+    setIsOpen(false)
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setIsOpen(true)
+      if (filteredCountries.length) {
+        setActiveIndex((index) => Math.min(index + 1, filteredCountries.length - 1))
+      }
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setIsOpen(true)
+      if (filteredCountries.length) {
+        setActiveIndex((index) => Math.max(index - 1, 0))
+      }
+    } else if (event.key === 'Enter' && isOpen && filteredCountries[activeIndex]) {
+      event.preventDefault()
+      chooseCountry(filteredCountries[activeIndex])
+    } else if (event.key === 'Escape') {
+      setIsOpen(false)
+    }
+  }
+
+  return (
+    <div
+      className="country-search"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false)
+      }}
+    >
+      <input
+        aria-activedescendant={isOpen && filteredCountries[activeIndex] ? `country-option-${activeIndex}` : undefined}
+        aria-autocomplete="list"
+        aria-controls={listId}
+        aria-expanded={isOpen}
+        autoComplete="country-name"
+        id="registration-country"
+        name="country"
+        onChange={(event) => {
+          setQuery(event.target.value)
+          event.currentTarget.setCustomValidity(event.target.value ? 'Selecciona un país de la lista.' : '')
+          onChange('')
+          setActiveIndex(0)
+          setIsOpen(true)
+        }}
+        onFocus={() => setIsOpen(true)}
+        onKeyDown={handleKeyDown}
+        placeholder="Busca o selecciona tu país"
+        ref={inputRef}
+        required
+        role="combobox"
+        value={query}
+      />
+      {isOpen && (
+        <ul className="country-search__options" id={listId} role="listbox">
+          {filteredCountries.length > 0
+            ? filteredCountries.map((country, index) => (
+              <li
+                aria-selected={value === country}
+                className={index === activeIndex ? 'country-search__option country-search__option--active' : 'country-search__option'}
+                id={`country-option-${index}`}
+                key={country}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => chooseCountry(country)}
+                role="option"
+              >
+                {country}
+              </li>
+            ))
+            : <li className="country-search__empty" role="presentation">No se encontraron países.</li>}
+        </ul>
+      )}
+    </div>
+  )
 }
 
 function ApplicationForm() {
@@ -608,19 +711,13 @@ function ApplicationForm() {
                 <span>Número de identificación <span className="required-mark">*</span></span>
                 <input autoComplete="off" name="identification_number" onChange={(event) => setProfile({ ...profile, identification_number: event.target.value })} placeholder="Número de documento" required value={profile.identification_number} />
               </label>
-              <label className="form-field">
-                <span>País <span className="required-mark">*</span></span>
-                <select
-                  autoComplete="country-name"
-                  name="country"
-                  onChange={(event) => setProfile({ ...profile, country: event.target.value })}
-                  required
+              <div className="form-field">
+                <label htmlFor="registration-country">País <span className="required-mark">*</span></label>
+                <CountrySearch
+                  onChange={(country) => setProfile((current) => ({ ...current, country }))}
                   value={profile.country}
-                >
-                  <option value="" disabled>Selecciona tu país</option>
-                  {countries.map((country) => <option key={country} value={country}>{country}</option>)}
-                </select>
-              </label>
+                />
+              </div>
               <label className="form-field">
                 <span>Teléfono <span className="required-mark">*</span></span>
                 <input autoComplete="tel" name="phone" onChange={(event) => setProfile({ ...profile, phone: event.target.value })} placeholder="+53 58049659" required type="tel" value={profile.phone} />
