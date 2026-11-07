@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronDown,
   FilePlus2,
   FileText,
   Eye,
@@ -309,29 +310,106 @@ function formatPrice(option) {
 }
 
 function CountrySearch({ value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const inputRef = useRef(null)
+  const normalizedValue = value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase()
+  const filteredCountries = countries.filter((country) =>
+    country.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().includes(normalizedValue),
+  )
+
+  function selectCountry(country) {
+    onChange(country)
+    inputRef.current?.setCustomValidity('')
+    setIsOpen(false)
+    setActiveIndex(0)
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setIsOpen(true)
+      if (filteredCountries.length) {
+        setActiveIndex((index) => Math.min(index + 1, filteredCountries.length - 1))
+      }
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setIsOpen(true)
+      if (filteredCountries.length) {
+        setActiveIndex((index) => Math.max(index - 1, 0))
+      }
+    } else if (event.key === 'Enter' && isOpen && filteredCountries[activeIndex]) {
+      event.preventDefault()
+      selectCountry(filteredCountries[activeIndex])
+    } else if (event.key === 'Escape') {
+      setIsOpen(false)
+    }
+  }
+
   return (
-    <div className="country-search">
-      <input
-        aria-describedby="registration-country-hint"
-        autoComplete="country-name"
-        id="registration-country"
-        list="registration-country-options"
-        name="country"
-        onChange={(event) => {
-          const country = event.target.value
-          event.currentTarget.setCustomValidity(
-            country && !countries.includes(country) ? 'Selecciona un país de las sugerencias.' : '',
-          )
-          onChange(country)
-        }}
-        placeholder="Escribe para buscar tu país"
-        required
-        value={value}
-      />
-      <datalist id="registration-country-options">
-        {countries.map((country) => <option key={country} value={country} />)}
-      </datalist>
-      <span className="field-hint" id="registration-country-hint">Escribe y borra normalmente; selecciona una sugerencia para completar el país.</span>
+    <div className="country-search" onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false)
+    }}>
+      <div className="country-search__input-wrap">
+        <input
+          aria-activedescendant={isOpen && filteredCountries[activeIndex] ? `country-option-${activeIndex}` : undefined}
+          aria-autocomplete="list"
+          aria-controls="registration-country-options"
+          aria-describedby="registration-country-hint"
+          aria-expanded={isOpen}
+          autoComplete="country-name"
+          id="registration-country"
+          name="country"
+          onChange={(event) => {
+            const country = event.target.value
+            event.currentTarget.setCustomValidity(
+              country && !countries.includes(country) ? 'Selecciona un país de la lista.' : '',
+            )
+            onChange(country)
+            setActiveIndex(0)
+            setIsOpen(true)
+          }}
+          onFocus={() => setIsOpen(true)}
+          onKeyDown={handleKeyDown}
+          placeholder="Escribe para buscar tu país"
+          ref={inputRef}
+          required
+          role="combobox"
+          value={value}
+        />
+        <button
+          aria-label={isOpen ? 'Ocultar países' : 'Mostrar países'}
+          aria-expanded={isOpen}
+          className="country-search__toggle"
+          onClick={() => {
+            setIsOpen((open) => !open)
+            inputRef.current?.focus()
+          }}
+          type="button"
+        >
+          <ChevronDown size={18} aria-hidden="true" />
+        </button>
+      </div>
+      {isOpen && (
+        <ul className="country-search__options" id="registration-country-options" role="listbox">
+          {filteredCountries.length
+            ? filteredCountries.map((country, index) => (
+              <li
+                aria-selected={value === country}
+                className={index === activeIndex ? 'country-search__option country-search__option--active' : 'country-search__option'}
+                id={`country-option-${index}`}
+                key={country}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => selectCountry(country)}
+                role="option"
+              >
+                {country}
+              </li>
+            ))
+            : <li className="country-search__empty" role="presentation">No se encontraron países.</li>}
+        </ul>
+      )}
+      <span className="field-hint" id="registration-country-hint">Escribe para filtrar o toca la flecha para ver la lista.</span>
     </div>
   )
 }
