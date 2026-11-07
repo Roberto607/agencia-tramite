@@ -86,6 +86,7 @@ class ClientLoginView(APIView):
                     "last_names": authenticated_user.last_name,
                     "identification_type": profile.identification_type,
                     "identification_number": profile.identification_number,
+                    "country": profile.country,
                     "phone": profile.phone,
                     "email": authenticated_user.email,
                 },

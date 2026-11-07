@@ -104,6 +104,7 @@ class ApplicationApiTests(APITestCase):
             "last_names": "Pérez López",
             "identification_type": "cedula",
             "identification_number": "123456789",
+            "country": "Cuba",
             "phone": "+53 58049659",
             "email": "ana@example.com",
             "password": "V3ry-Strong-Account-Password-892!",
@@ -118,6 +119,7 @@ class ApplicationApiTests(APITestCase):
         self.assertNotIn("password", registration.data)
         user = get_user_model().objects.get(email="ana@example.com")
         self.assertTrue(user.check_password(registration_data["password"]))
+        self.assertEqual(user.client_profile.country, "Cuba")
         self.client.credentials(HTTP_AUTHORIZATION=f"Token {registration.data['token']}")
 
         application_response = self.client.post(
@@ -148,6 +150,7 @@ class ApplicationApiTests(APITestCase):
         application = Application.objects.get(pk=application_response.data["id"])
         self.assertEqual(application.user, user)
         self.assertEqual(application.first_names, "Ana María")
+        self.assertEqual(application.country, "Cuba")
         self.assertEqual(application.last_names, "Pérez López")
         self.assertEqual(application.identification_number, "123456789")
         self.assertEqual(application.email, "ana@example.com")
@@ -179,6 +182,7 @@ class ApplicationApiTests(APITestCase):
             "last_names": "Pérez",
             "identification_type": "cedula",
             "identification_number": "123456789",
+            "country": "",
             "phone": "+53 58049659",
             "email": "ana@example.com",
             "password": "V3ry-Strong-Account-Password-892!",
@@ -204,6 +208,7 @@ class ApplicationApiTests(APITestCase):
             "last_names": "Pérez López",
             "identification_type": "cedula",
             "identification_number": "123456789",
+            "country": "Cuba",
             "phone": "+53 58049659",
             "email": "ana@example.com",
             "password": "V3ry-Strong-Account-Password-892!",
@@ -225,6 +230,7 @@ class ApplicationApiTests(APITestCase):
                 "last_names": "Pérez López",
                 "identification_type": "cedula",
                 "identification_number": "123456789",
+                "country": "Cuba",
                 "phone": "+53 58049659",
                 "email": "ana@example.com",
             },

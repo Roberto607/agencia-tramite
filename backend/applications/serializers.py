@@ -17,6 +17,7 @@ class ClientRegistrationSerializer(serializers.Serializer):
     last_names = serializers.CharField(max_length=120)
     identification_type = serializers.ChoiceField(choices=Application._meta.get_field("identification_type").choices)
     identification_number = serializers.CharField(max_length=40)
+    country = serializers.CharField(max_length=80, required=False, allow_blank=True, default="")
     phone = serializers.CharField(max_length=40)
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, trim_whitespace=False, min_length=8)
@@ -78,6 +79,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
             "last_names",
             "identification_type",
             "identification_number",
+            "country",
             "email",
             "phone",
             "service_type",
@@ -182,6 +184,7 @@ class ApplicationSerializer(serializers.ModelSerializer):
                         last_names=request.user.last_name,
                         identification_type=client_profile.identification_type,
                         identification_number=client_profile.identification_number,
+                        country=client_profile.country,
                         email=request.user.email,
                         phone=client_profile.phone,
                     )

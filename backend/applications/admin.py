@@ -80,6 +80,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         "full_name",
         "identification_type",
         "identification_number",
+        "country",
         "email",
         "phone",
         "service_types_summary",
@@ -90,12 +91,12 @@ class ApplicationAdmin(admin.ModelAdmin):
     )
     list_display_links = ("id", "full_name")
     list_filter = ()
-    search_fields = ("first_names", "last_names", "identification_number", "email", "phone", "other_service")
+    search_fields = ("first_names", "last_names", "identification_number", "country", "email", "phone", "other_service")
     ordering = ("-created_at",)
     list_per_page = 25
     inlines = (ApplicationDocumentInline,)
     fieldsets = (
-        ("Datos del solicitante", {"fields": ("first_names", "last_names", "identification_type", "identification_number")}),
+        ("Datos del solicitante", {"fields": ("first_names", "last_names", "identification_type", "identification_number", "country")}),
         ("Contacto", {"fields": ("email", "phone")}),
         ("Trámite", {"fields": ("service_types_display", "service_options_display", "service_options_total_display", "other_service")}),
         ("Estado de la solicitud", {"fields": ("status_display",)}),
@@ -106,6 +107,7 @@ class ApplicationAdmin(admin.ModelAdmin):
         "last_names",
         "identification_type",
         "identification_number",
+        "country",
         "email",
         "phone",
         "service_types_display",
@@ -442,6 +444,7 @@ class ApplicationAdmin(admin.ModelAdmin):
             f"Nombre: {self._txt_value(application.first_names)} {self._txt_value(application.last_names)}",
             f"Tipo de identificación: {self._txt_value(application.get_identification_type_display())}",
             f"Número de identificación: {self._txt_value(application.identification_number)}",
+            f"País: {self._txt_value(application.country)}",
             f"Correo: {self._txt_value(application.email)}",
             f"Teléfono: {self._txt_value(application.phone)}",
             f"Trámites solicitados: {self._txt_value(self.service_types_display(application))}",

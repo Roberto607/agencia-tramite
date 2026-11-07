@@ -47,6 +47,7 @@ class Application(models.Model):
     last_names = models.CharField(max_length=120)
     identification_type = models.CharField(max_length=20, choices=IdentificationType.choices)
     identification_number = models.CharField(max_length=40)
+    country = models.CharField(max_length=80, blank=True, default="")
     email = models.EmailField()
     phone = models.CharField(max_length=40, blank=True)
     service_type = models.CharField(max_length=80, choices=ServiceType.choices, default=ServiceType.APOSTILLE_CONSULATE)
@@ -137,6 +138,7 @@ class ClientProfile(models.Model):
     )
     identification_type = models.CharField(max_length=20, choices=IdentificationType.choices)
     identification_number = models.CharField(max_length=40)
+    country = models.CharField(max_length=80, blank=True, default="")
     phone = models.CharField(max_length=40)
 
     def __str__(self):
