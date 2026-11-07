@@ -533,112 +533,121 @@ function ApplicationForm() {
                 <legend>Selecciona los trámites que necesitas <span className="required-mark">*</span></legend>
                 <p className="service-selection__hint">Puedes marcar más de uno.</p>
                 <div className="service-selection__options">
-                  {serviceCatalog.map(({ value, label, pricingGroups, note }) => {
-                    const isSelected = selectedServices.includes(value)
-                    const documents = serviceDocuments[value] ?? []
-                    const photoInputKey = `${value}-photo`
-                    const documentInputKey = `${value}-document`
+                  {[0, 1].map((columnIndex) => (
+                    <div className="service-selection__column" key={columnIndex}>
+                      {serviceCatalog.map(({ value, label, pricingGroups, note }, serviceIndex) => {
+                        if (serviceIndex % 2 !== columnIndex) return null
+                        const isSelected = selectedServices.includes(value)
+                        const documents = serviceDocuments[value] ?? []
+                        const photoInputKey = `${value}-photo`
+                        const documentInputKey = `${value}-document`
 
-                    return (
-                      <div className={`service-option${isSelected ? ' service-option--selected' : ''}`} key={value}>
-                        <div className="service-option__row">
-                          <label className="service-option__choice">
-                            <input
-                              checked={isSelected}
-                              name="service_options"
-                              onChange={(event) => toggleService(value, event.target.checked)}
-                              type="checkbox"
-                              value={value}
-                            />
-                            <span>{label}</span>
-                          </label>
-                          <div className="service-option__uploads">
-                            <input
-                              accept="image/*"
-                              aria-label={`Foto para ${label}`}
-                              className="visually-hidden"
-                              multiple
-                              onChange={(event) => addServiceDocuments(value, 'photo', event)}
-                              ref={(element) => { fileInputRefs.current[photoInputKey] = element }}
-                              type="file"
-                            />
-                            <button
-                              aria-label={`Añadir foto para ${label}`}
-                              className="service-upload-button"
-                              onClick={() => fileInputRefs.current[photoInputKey]?.click()}
-                              title="Añadir foto"
-                              type="button"
-                            >
-                              <ImagePlus size={17} aria-hidden="true" />
-                            </button>
-                            <input
-                              accept=".pdf,.doc,.docx,.odt,.rtf,.txt"
-                              aria-label={`Documento para ${label}`}
-                              className="visually-hidden"
-                              multiple
-                              onChange={(event) => addServiceDocuments(value, 'document', event)}
-                              ref={(element) => { fileInputRefs.current[documentInputKey] = element }}
-                              type="file"
-                            />
-                            <button
-                              aria-label={`Añadir documento para ${label}`}
-                              className="service-upload-button"
-                              onClick={() => fileInputRefs.current[documentInputKey]?.click()}
-                              title="Añadir documento"
-                              type="button"
-                            >
-                              <FilePlus2 size={17} aria-hidden="true" />
-                            </button>
-                          </div>
-                        </div>
-                        {isSelected && pricingGroups && (
-                          <div className="service-option__pricing">
-                            {pricingGroups.map((group) => (
-                              <label className="service-option__price-field" key={group.id}>
-                                <span>{group.label}</span>
-                                <select
-                                  onChange={(event) => setSelectedPricingOptions((current) => ({
-                                    ...current,
-                                    [value]: { ...current[value], [group.id]: event.target.value },
-                                  }))}
-                                  value={selectedPricingOptions[value]?.[group.id] ?? ''}
-                                >
-                                  <option value="">No incluir</option>
-                                  {group.options.map((option) => (
-                                    <option key={option.id} value={option.id}>
-                                      {option.label} · {option.time} · {formatPrice(option)}
-                                    </option>
-                                  ))}
-                                </select>
+                        return (
+                          <div
+                            className={`service-option${isSelected ? ' service-option--selected' : ''}`}
+                            key={value}
+                            style={{ order: serviceIndex }}
+                          >
+                            <div className="service-option__row">
+                              <label className="service-option__choice">
+                                <input
+                                  checked={isSelected}
+                                  name="service_options"
+                                  onChange={(event) => toggleService(value, event.target.checked)}
+                                  type="checkbox"
+                                  value={value}
+                                />
+                                <span>{label}</span>
                               </label>
-                            ))}
-                          </div>
-                        )}
-                        {isSelected && note && <p className="service-option__note">{note}</p>}
-                        {documents.length > 0 && (
-                          <ul className="service-option__files" aria-label={`Archivos para ${label}`}>
-                            {documents.map(({ id, file, fileType }) => (
-                              <li className="document-item" key={id}>
-                                {fileType === 'photo'
-                                  ? <ImagePlus size={17} aria-hidden="true" />
-                                  : <FileText size={17} aria-hidden="true" />}
-                                <span className="document-item__name">{file.name}</span>
-                                <span className="document-item__size">{formatFileSize(file.size)}</span>
+                              <div className="service-option__uploads">
+                                <input
+                                  accept="image/*"
+                                  aria-label={`Foto para ${label}`}
+                                  className="visually-hidden"
+                                  multiple
+                                  onChange={(event) => addServiceDocuments(value, 'photo', event)}
+                                  ref={(element) => { fileInputRefs.current[photoInputKey] = element }}
+                                  type="file"
+                                />
                                 <button
-                                  aria-label={`Quitar ${file.name}`}
-                                  className="remove-file-button"
-                                  onClick={() => removeServiceDocument(value, id)}
+                                  aria-label={`Añadir foto para ${label}`}
+                                  className="service-upload-button"
+                                  onClick={() => fileInputRefs.current[photoInputKey]?.click()}
+                                  title="Añadir foto"
                                   type="button"
                                 >
-                                  <Trash2 size={17} aria-hidden="true" />
+                                  <ImagePlus size={17} aria-hidden="true" />
                                 </button>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    )
-                  })}
+                                <input
+                                  accept=".pdf,.doc,.docx,.odt,.rtf,.txt"
+                                  aria-label={`Documento para ${label}`}
+                                  className="visually-hidden"
+                                  multiple
+                                  onChange={(event) => addServiceDocuments(value, 'document', event)}
+                                  ref={(element) => { fileInputRefs.current[documentInputKey] = element }}
+                                  type="file"
+                                />
+                                <button
+                                  aria-label={`Añadir documento para ${label}`}
+                                  className="service-upload-button"
+                                  onClick={() => fileInputRefs.current[documentInputKey]?.click()}
+                                  title="Añadir documento"
+                                  type="button"
+                                >
+                                  <FilePlus2 size={17} aria-hidden="true" />
+                                </button>
+                              </div>
+                            </div>
+                            {isSelected && pricingGroups && (
+                              <div className="service-option__pricing">
+                                {pricingGroups.map((group) => (
+                                  <label className="service-option__price-field" key={group.id}>
+                                    <span>{group.label}</span>
+                                    <select
+                                      onChange={(event) => setSelectedPricingOptions((current) => ({
+                                        ...current,
+                                        [value]: { ...current[value], [group.id]: event.target.value },
+                                      }))}
+                                      value={selectedPricingOptions[value]?.[group.id] ?? ''}
+                                    >
+                                      <option value="">No incluir</option>
+                                      {group.options.map((option) => (
+                                        <option key={option.id} value={option.id}>
+                                          {option.label} · {option.time} · {formatPrice(option)}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                            {isSelected && note && <p className="service-option__note">{note}</p>}
+                            {documents.length > 0 && (
+                              <ul className="service-option__files" aria-label={`Archivos para ${label}`}>
+                                {documents.map(({ id, file, fileType }) => (
+                                  <li className="document-item" key={id}>
+                                    {fileType === 'photo'
+                                      ? <ImagePlus size={17} aria-hidden="true" />
+                                      : <FileText size={17} aria-hidden="true" />}
+                                    <span className="document-item__name">{file.name}</span>
+                                    <span className="document-item__size">{formatFileSize(file.size)}</span>
+                                    <button
+                                      aria-label={`Quitar ${file.name}`}
+                                      className="remove-file-button"
+                                      onClick={() => removeServiceDocument(value, id)}
+                                      type="button"
+                                    >
+                                      <Trash2 size={17} aria-hidden="true" />
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ))}
                 </div>
               </fieldset>
 
