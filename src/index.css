@@ -246,6 +246,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .footer-main { width: min(100% - 40px, 1440px); gap: 24px; }
 }
 
+@media (min-width: 1001px) {
+  .hero__brand-mark { transform: translateX(-24px); }
+}
+
 @media (max-width: 760px) {
   .site-header { height: 76px; }
   .header-inner { width: calc(100% - 36px); }
