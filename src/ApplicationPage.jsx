@@ -128,6 +128,7 @@ function ApplicationForm() {
   const [selectedServices, setSelectedServices] = useState([])
   const [selectedPricingOptions, setSelectedPricingOptions] = useState({})
   const [serviceDocuments, setServiceDocuments] = useState({})
+  const [otherServiceDescription, setOtherServiceDescription] = useState('')
   const [applicationId, setApplicationId] = useState(null)
   const [submissionError, setSubmissionError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -151,6 +152,38 @@ function ApplicationForm() {
     if (option.currency) result[option.currency] = (result[option.currency] ?? 0) + option.price
     return result
   }, {})
+  const hasUnpricedSelection = selectedPricingDetails.some((option) => option.price == null)
+  const hasCustomPricedServices = selectedServices.some((serviceValue) =>
+    !serviceCatalog.find((service) => service.value === serviceValue)?.pricingGroups,
+  )
+  const formattedTotal = [
+    totals.CUP ? `${new Intl.NumberFormat('es-CU').format(totals.CUP)} CUP` : '',
+    totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : '',
+  ].filter(Boolean).join(' + ') || 'Pendiente de cotización'
+  const whatsappMessage = [
+    `Hola, solicité estos trámites${applicationId ? ` (consulta #${applicationId})` : ''}.`,
+    `Nombre: ${[profile.first_names, profile.last_names].filter(Boolean).join(' ') || 'No indicado'}.`,
+    '',
+    'Trámites solicitados:',
+    ...selectedServices.flatMap((serviceValue) => {
+      const service = serviceCatalog.find((item) => item.value === serviceValue)
+      const options = selectedPricingDetails.filter((item) => item.service === serviceValue)
+      const details = options.length > 0
+        ? options.map((option) =>
+          `  - ${option.group}: ${option.option} | ${option.time} | ${formatPrice(option)}`,
+        )
+        : [`  - ${service?.note ?? 'Tiempo y costo por confirmar.'}`]
+      if (serviceValue === 'otros' && otherServiceDescription.trim()) {
+        details.push(`  - Detalle: ${otherServiceDescription.trim()}`)
+      }
+      return [`- ${service?.label ?? serviceValue}`, ...details]
+    }),
+    '',
+    `Total estimado: ${formattedTotal}`,
+    ...(hasUnpricedSelection || hasCustomPricedServices
+      ? ['Hay conceptos cuyo precio debe confirmarse al revisar la solicitud.']
+      : []),
+  ].join('\n')
 
   function addServiceDocuments(service, fileType, event) {
     const selectedFiles = Array.from(event.currentTarget.files ?? [])
@@ -634,15 +667,12 @@ function ApplicationForm() {
                     })}
                   </ul>
                   <p className="service-summary__total">
-                    Total estimado: {totals.CUP ? `${new Intl.NumberFormat('es-CU').format(totals.CUP)} CUP` : ''}
-                    {totals.CUP && totals.USD ? ' + ' : ''}
-                    {totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : ''}
-                    {!totals.CUP && !totals.USD ? 'Pendiente de cotización' : ''}
+                    Total estimado: {formattedTotal}
                   </p>
-                  {selectedServices.some((serviceValue) => serviceCatalog.find((item) => item.value === serviceValue)?.pricingGroups?.some((group) => group.options.some((option) => option.price == null))) && (
+                  {hasUnpricedSelection && (
                     <p className="service-summary__note">El total no incluye los conceptos marcados «Precio a consultar».</p>
                   )}
-                  {selectedServices.some((serviceValue) => !serviceCatalog.find((item) => item.value === serviceValue)?.pricingGroups) && (
+                  {hasCustomPricedServices && (
                     <p className="service-summary__note">Algunos trámites requieren cotización personalizada.</p>
                   )}
                 </section>
@@ -653,9 +683,11 @@ function ApplicationForm() {
                   <span>Describe tu trámite <span className="required-mark">*</span></span>
                   <textarea
                     name="other_service"
+                    onChange={(event) => setOtherServiceDescription(event.target.value)}
                     placeholder="Escribe el trámite que necesitas."
                     rows="4"
                     required
+                    value={otherServiceDescription}
                   />
                 </label>
               )}
@@ -700,19 +732,17 @@ function ApplicationForm() {
               </ul>
               <div className="application-complete__total">
                 <span>Total estimado</span>
-                <strong>
-                  {totals.CUP ? `${new Intl.NumberFormat('es-CU').format(totals.CUP)} CUP` : ''}
-                  {totals.CUP && totals.USD ? ' + ' : ''}
-                  {totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : ''}
-                  {!totals.CUP && !totals.USD ? 'Pendiente de cotización' : ''}
-                </strong>
+                <strong>{formattedTotal}</strong>
+                {(hasUnpricedSelection || hasCustomPricedServices) && (
+                  <small>El total no incluye los conceptos cuyo precio debe confirmarse.</small>
+                )}
               </div>
               <div className="application-complete__contact">
                 <div>
                   <strong>¿Qué sigue?</strong>
                   <p>Los tiempos y precios se confirmarán al revisar tu solicitud. Para continuar, contacta con nosotros.</p>
                 </div>
-                <a className="phone-contact__link" href="https://wa.me/5358049659" target="_blank" rel="noreferrer">
+                <a className="phone-contact__link" href={`https://wa.me/5358049659?text=${encodeURIComponent(whatsappMessage)}`} target="_blank" rel="noreferrer">
                   <MessageCircle size={17} aria-hidden="true" /> Contactar
                 </a>
               </div>

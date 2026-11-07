@@ -109,6 +109,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .application-complete__options { display: grid; gap: 4px; margin: 6px 0 0; padding: 0; color: #587261; font-size: 13px; list-style: none; }
 .application-complete__total { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 18px; margin: 0 0 18px; padding: 14px 16px; border-radius: 8px; background: #e2f3e8; color: #315d40; font-size: 13px; }
 .application-complete__total strong { color: #174b2d; font-size: 16px; }
+.application-complete__total small { flex: 1 0 100%; color: #587261; font-size: 12px; line-height: 1.45; }
 .application-complete__contact { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-top: 16px; border-top: 1px solid #d5e9db; }
 .application-complete__contact strong { color: #174b2d; font-size: 14px; }
 .application-complete__contact p { margin: 4px 0 0; color: #587261; font-size: 13px; line-height: 1.5; }
