@@ -127,6 +127,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .service-documents { padding-top: 15px; border-top: 1px solid #e5ebf3; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 23px 20px; }
 .form-field { min-width: 0; display: flex; flex-direction: column; gap: 9px; color: #152f53; font-size: 13px; font-weight: 700; animation: section-enter 400ms ease-out 260ms both; }
+.form-field:focus-within { position: relative; z-index: 5; }
 .service-selection { min-width: 0; margin: 0; padding: 0; border: 0; }
 .service-selection legend { padding: 0; color: #152f53; font-size: 13px; font-weight: 700; }
 .service-selection__hint { margin: -2px 0 2px; color: #718198; font-size: 12px; font-weight: 400; }
@@ -180,7 +181,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .country-search__toggle { position: absolute; top: 4px; right: 4px; width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 4px; background: transparent; color: #536780; cursor: pointer; }
 .country-search__toggle:hover { background: #edf3fb; color: #1260df; }
 .country-search__toggle:focus-visible { outline: 2px solid #1260df; outline-offset: -2px; }
-.country-search__options { position: absolute; z-index: 30; top: calc(100% + 5px); right: 0; left: 0; max-height: 240px; overflow-y: auto; margin: 0; padding: 5px; border: 1px solid #cbd6e5; border-radius: 6px; background: #fff; box-shadow: 0 12px 28px rgba(12, 40, 81, .16); list-style: none; }
+.country-search__options { position: absolute; z-index: 30; top: calc(100% + 5px); right: 0; left: 0; max-height: min(280px, 40vh); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; margin: 0; padding: 5px; border: 1px solid #cbd6e5; border-radius: 6px; background: #fff; box-shadow: 0 12px 28px rgba(12, 40, 81, .16); list-style: none; -webkit-overflow-scrolling: touch; }
 .country-search__option { min-height: 38px; padding: 8px 10px; border-radius: 4px; color: #173456; font-size: 14px; cursor: pointer; }
 .country-search__option:hover, .country-search__option--active { background: #eef5ff; color: #104fae; }
 .country-search__empty { padding: 10px; color: #708197; font-size: 13px; }
