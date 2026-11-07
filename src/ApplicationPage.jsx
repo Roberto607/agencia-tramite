@@ -3,6 +3,8 @@ import {
   CheckCircle2,
   FilePlus2,
   FileText,
+  Eye,
+  EyeOff,
   ImagePlus,
   MessageCircle,
   Trash2,
@@ -111,6 +113,8 @@ function ApplicationForm() {
   const [step, setStep] = useState('register')
   const [authMode, setAuthMode] = useState('register')
   const [loginCredentials, setLoginCredentials] = useState({ email: '', password: '' })
+  const [showRegistrationPassword, setShowRegistrationPassword] = useState(false)
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [profile, setProfile] = useState({
     first_names: '',
     last_names: '',
@@ -212,10 +216,25 @@ function ApplicationForm() {
     return result
   }
 
-  function handleRegistration(event) {
+  async function handleRegistration(event) {
     event.preventDefault()
     setSubmissionError('')
-    setStep('services')
+    setIsSubmitting(true)
+
+    try {
+      const result = await getApiResult(await fetch(`${API_BASE_URL}/api/register/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+      }))
+      setAuthToken(result.token)
+      setProfile((current) => ({ ...current, password: '' }))
+      setStep('registered')
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : 'No se pudo crear la cuenta.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   async function handleLogin(event) {
@@ -314,16 +333,20 @@ function ApplicationForm() {
           <h2 id="application-title">
             {step === 'register'
               ? authMode === 'register' ? 'Crea tu cuenta' : 'Inicia sesión'
-              : step === 'services' ? 'Selecciona tus trámites' : 'Solicitud enviada'}
+              : step === 'registered'
+                ? 'Cuenta creada'
+                : step === 'services' ? 'Selecciona tus trámites' : 'Solicitud enviada'}
           </h2>
           <p>
             {step === 'register'
               ? authMode === 'register'
-                ? 'Completa tus datos. La cuenta se creará cuando envíes la solicitud.'
+                ? 'Completa tus datos para crear tu cuenta. Puedes seleccionar tus trámites ahora o hacerlo después.'
                 : 'Ingresa con el correo y la contraseña de tu cuenta.'
-              : step === 'services'
-                ? 'Elige uno o más trámites y adjunta sus documentos.'
-                : 'Ya recibimos tu consulta.'}
+              : step === 'registered'
+                ? 'Tu cuenta ya está lista. Puedes elegir tus trámites ahora o iniciar sesión más adelante.'
+                : step === 'services'
+                  ? 'Elige uno o más trámites y adjunta sus documentos.'
+                  : 'Ya recibimos tu consulta.'}
           </p>
         </div>
 
@@ -363,14 +386,27 @@ function ApplicationForm() {
               </label>
               <label className="form-field form-field--full">
                 <span>Contraseña <span className="required-mark">*</span></span>
-                <input autoComplete="new-password" minLength="8" name="password" onChange={(event) => setProfile({ ...profile, password: event.target.value })} required type="password" value={profile.password} />
+                <span className="password-input-wrap">
+                  <input autoComplete="new-password" minLength="8" name="password" onChange={(event) => setProfile({ ...profile, password: event.target.value })} required type={showRegistrationPassword ? 'text' : 'password'} value={profile.password} />
+                  <button
+                    aria-label={showRegistrationPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-pressed={showRegistrationPassword}
+                    className="password-visibility-toggle"
+                    onClick={() => setShowRegistrationPassword((visible) => !visible)}
+                    type="button"
+                  >
+                    {showRegistrationPassword
+                      ? <EyeOff size={19} aria-hidden="true" />
+                      : <Eye size={19} aria-hidden="true" />}
+                  </button>
+                </span>
                 <span className="field-hint">Usa al menos 8 caracteres y evita contraseñas comunes.</span>
               </label>
             </div>
             <div className="form-actions">
               <p><span className="required-mark">*</span> Campos obligatorios</p>
               <button className="primary-button" disabled={isSubmitting} type="submit">
-                Continuar a seleccionar trámites <ArrowRight size={18} aria-hidden="true" />
+                {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta y continuar'} <ArrowRight size={18} aria-hidden="true" />
               </button>
             </div>
             <p className="auth-switch">
@@ -396,13 +432,26 @@ function ApplicationForm() {
               </label>
               <label className="form-field form-field--full">
                 <span>Contraseña <span className="required-mark">*</span></span>
-                <input
-                  autoComplete="current-password"
-                  onChange={(event) => setLoginCredentials({ ...loginCredentials, password: event.target.value })}
-                  required
-                  type="password"
-                  value={loginCredentials.password}
-                />
+                <span className="password-input-wrap">
+                  <input
+                    autoComplete="current-password"
+                    onChange={(event) => setLoginCredentials({ ...loginCredentials, password: event.target.value })}
+                    required
+                    type={showLoginPassword ? 'text' : 'password'}
+                    value={loginCredentials.password}
+                  />
+                  <button
+                    aria-label={showLoginPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    aria-pressed={showLoginPassword}
+                    className="password-visibility-toggle"
+                    onClick={() => setShowLoginPassword((visible) => !visible)}
+                    type="button"
+                  >
+                    {showLoginPassword
+                      ? <EyeOff size={19} aria-hidden="true" />
+                      : <Eye size={19} aria-hidden="true" />}
+                  </button>
+                </span>
               </label>
             </div>
             <div className="form-actions">
@@ -416,6 +465,22 @@ function ApplicationForm() {
             </p>
             {submissionError && <p className="form-notice form-notice--error" role="alert">{submissionError}</p>}
           </form>
+        )}
+
+        {step === 'registered' && (
+          <div className="application-form account-created" role="status">
+            <CheckCircle2 size={38} aria-hidden="true" />
+            <div className="account-created__content">
+              <h3>Tu cuenta se creó correctamente.</h3>
+              <p>No tienes que completar una solicitud ahora. Cuando quieras, podrás iniciar sesión y seleccionar los trámites que necesitas.</p>
+              <div className="account-created__actions">
+                <button className="primary-button" onClick={() => setStep('services')} type="button">
+                  Seleccionar trámites ahora <ArrowRight size={18} aria-hidden="true" />
+                </button>
+                <a className="account-created__later" href="/">Lo haré después</a>
+              </div>
+            </div>
+          </div>
         )}
 
         {step === 'services' && (
@@ -627,9 +692,9 @@ function ApplicationForm() {
                 {!totals.CUP && !totals.USD ? 'Pendiente de cotización' : ''}
               </p>
               <p>Los tiempos y precios pueden confirmarse al revisar tu solicitud.</p>
-              <p>Si necesitas ayuda, puedes contactarnos por WhatsApp.</p>
+              <p>Para continuar, debes contactar con nosotros.</p>
               <a className="phone-contact__link" href="https://wa.me/5358049659" target="_blank" rel="noreferrer">
-                <MessageCircle size={17} aria-hidden="true" /> WhatsApp: +53 58049659
+                <MessageCircle size={17} aria-hidden="true" /> Contactar
               </a>
             </div>
           </div>

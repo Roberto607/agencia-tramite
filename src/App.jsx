@@ -75,6 +75,9 @@ function Hero() {
           </a>
           <span className="hero__note">Crea tu cuenta para iniciar y consultar tu solicitud.</span>
         </div>
+        <div className="hero__brand-mark" aria-hidden="true">
+          <img src="/logo-lba.png" alt="" />
+        </div>
       </div>
     </section>
   )
