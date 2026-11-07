@@ -134,9 +134,9 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .service-option { min-width: 0; min-height: 48px; align-self: start; padding: 9px 10px; border: 1px solid #d5e1f5; border-radius: 5px; background: #fbfcfe; color: #173456; font-size: 13px; font-weight: 500; line-height: 1.4; transition: border-color 150ms ease, background 150ms ease; }
 .service-option:has(input:checked) { border-color: #1260df; background: #f0f6ff; }
 .service-option__row { min-height: 34px; display: flex; align-items: center; gap: 8px; }
-.service-option__pricing { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 9px; margin: 10px 0 2px; padding-top: 10px; border-top: 1px solid #dce5f1; }
+.service-option__pricing { display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; margin: 10px 0 2px; padding-top: 10px; border-top: 1px solid #dce5f1; }
 .service-option__price-field { min-width: 0; display: flex; flex-direction: column; gap: 5px; color: #536780; font-size: 11px; font-weight: 700; }
-.service-option__price-field select { width: 100%; min-height: 36px; padding: 5px 8px; border: 1px solid #cbd6e5; border-radius: 4px; background: #fff; color: #173456; font: inherit; font-size: 12px; }
+.service-option__price-field select { width: 100%; min-width: 0; min-height: 40px; padding: 6px 10px; border: 1px solid #cbd6e5; border-radius: 4px; background: #fff; color: #173456; font: inherit; font-size: 13px; }
 .service-option__note { margin: 9px 0 2px; padding-top: 9px; border-top: 1px solid #dce5f1; color: #536780; font-size: 12px; font-weight: 400; }
 .service-summary { padding: 16px; border: 1px solid #cbdcf3; border-radius: 5px; background: #f5f8fd; }
 .service-summary h3 { margin: 0 0 10px; color: #0c2851; font-size: 16px; }
