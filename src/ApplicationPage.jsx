@@ -73,14 +73,14 @@ const serviceCatalog = [
     label: 'Títulos de estudio, certificación de notas y plan temático',
     pricingGroups: [
       { id: 'obtencion', label: 'Obtención', options: [{ id: 'obtencion', label: 'Obtención', time: '1–30 días', price: null, currency: null }] },
-      { id: 'preuniversitario', label: 'Título preuniversitario o certificación de notas', options: [
+      { id: 'preuniversitario', label: 'Legalización (título preuniversitario o certificación de notas)', options: [
         { id: 'express', label: 'Vía express', time: '1–10 días', price: 150, currency: 'USD' },
         { id: 'lenta', label: 'Vía lenta', time: '30–90 días', price: 20000, currency: 'CUP' },
       ] },
-      { id: 'universitario', label: 'Título universitario o certificación de notas', options: [
+      { id: 'universitario', label: 'Legalización (título universitario o certificación de notas)', options: [
         { id: 'lenta', label: 'Vía lenta', time: '30–90 días', price: 25000, currency: 'CUP' },
       ] },
-      { id: 'plan_tematico', label: 'Plan temático', options: [
+      { id: 'plan_tematico', label: 'Legalización (plan temático)', options: [
         { id: 'express', label: 'Vía express', time: '1–10 días', price: 250, currency: 'USD' },
         { id: 'lenta', label: 'Vía lenta', time: '30–90 días', price: 35000, currency: 'CUP' },
       ] },
