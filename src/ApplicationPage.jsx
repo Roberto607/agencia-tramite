@@ -676,39 +676,46 @@ function ApplicationForm() {
 
         {step === 'complete' && (
           <div className="application-form application-complete" role="status">
-            <CheckCircle2 size={35} aria-hidden="true" />
-            <div>
+            <CheckCircle2 className="application-complete__icon" size={35} aria-hidden="true" />
+            <div className="application-complete__content">
               <h3>Tu consulta #{applicationId} será analizada en un plazo de 72 horas.</h3>
-              <p>Trámites solicitados:</p>
+              <p className="application-complete__label">Trámites solicitados</p>
               <ul className="application-complete__services">
                 {selectedServices.map((serviceValue) => {
                   const service = serviceCatalog.find((item) => item.value === serviceValue)
                   const options = selectedPricingDetails.filter((item) => item.service === serviceValue)
                   return (
-                    <li key={serviceValue}>
+                    <li className="application-complete__service" key={serviceValue}>
                       <strong>{service?.label}</strong>
                       {options.length > 0
-                        ? <ul>{options.map((option) => (
+                        ? <ul className="application-complete__options">{options.map((option) => (
                           <li key={`${option.group}-${option.option}`}>
                             {option.group}: {option.option} · {option.time} · {formatPrice(option)}
                           </li>
                         ))}</ul>
-                        : <span>{service?.note ?? 'Pendiente de cotización'}</span>}
+                        : <span className="application-complete__description">{service?.note ?? 'Pendiente de cotización'}</span>}
                     </li>
                   )
                 })}
               </ul>
-              <p className="application-complete__total">
-                Total estimado: {totals.CUP ? `${new Intl.NumberFormat('es-CU').format(totals.CUP)} CUP` : ''}
-                {totals.CUP && totals.USD ? ' + ' : ''}
-                {totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : ''}
-                {!totals.CUP && !totals.USD ? 'Pendiente de cotización' : ''}
-              </p>
-              <p>Los tiempos y precios pueden confirmarse al revisar tu solicitud.</p>
-              <p>Para continuar, debes contactar con nosotros.</p>
-              <a className="phone-contact__link" href="https://wa.me/5358049659" target="_blank" rel="noreferrer">
-                <MessageCircle size={17} aria-hidden="true" /> Contactar
-              </a>
+              <div className="application-complete__total">
+                <span>Total estimado</span>
+                <strong>
+                  {totals.CUP ? `${new Intl.NumberFormat('es-CU').format(totals.CUP)} CUP` : ''}
+                  {totals.CUP && totals.USD ? ' + ' : ''}
+                  {totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : ''}
+                  {!totals.CUP && !totals.USD ? 'Pendiente de cotización' : ''}
+                </strong>
+              </div>
+              <div className="application-complete__contact">
+                <div>
+                  <strong>¿Qué sigue?</strong>
+                  <p>Los tiempos y precios se confirmarán al revisar tu solicitud. Para continuar, contacta con nosotros.</p>
+                </div>
+                <a className="phone-contact__link" href="https://wa.me/5358049659" target="_blank" rel="noreferrer">
+                  <MessageCircle size={17} aria-hidden="true" /> Contactar
+                </a>
+              </div>
             </div>
           </div>
         )}
