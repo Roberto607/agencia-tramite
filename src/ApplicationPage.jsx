@@ -128,7 +128,6 @@ function ApplicationForm() {
   const [selectedPricingOptions, setSelectedPricingOptions] = useState({})
   const [serviceDocuments, setServiceDocuments] = useState({})
   const [otherServiceDescription, setOtherServiceDescription] = useState('')
-  const [applicationId, setApplicationId] = useState(null)
   const [submissionError, setSubmissionError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRefs = useRef({})
@@ -160,7 +159,7 @@ function ApplicationForm() {
     totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : '',
   ].filter(Boolean).join(' + ') || 'Pendiente de cotización'
   const whatsappMessage = [
-    `Hola, solicité estos trámites${applicationId ? ` (consulta #${applicationId})` : ''}.`,
+    'Hola, quiero solicitar estos trámites:',
     `Nombre: ${[profile.first_names, profile.last_names].filter(Boolean).join(' ') || 'No indicado'}.`,
     '',
     'Trámites solicitados:',
@@ -337,12 +336,11 @@ function ApplicationForm() {
         setProfile((current) => ({ ...current, password: '' }))
       }
 
-      const result = await getApiResult(await fetch(`${API_BASE_URL}/api/applications/`, {
+      await getApiResult(await fetch(`${API_BASE_URL}/api/applications/`, {
         method: 'POST',
         headers: { Authorization: `Token ${submissionToken}` },
         body: formData,
       }))
-      setApplicationId(result.id)
       setStep('complete')
     } catch (error) {
       setSubmissionError(
@@ -367,7 +365,7 @@ function ApplicationForm() {
               ? authMode === 'register' ? 'Crea tu cuenta' : 'Inicia sesión'
               : step === 'registered'
                 ? 'Cuenta creada'
-                : step === 'services' ? 'Selecciona tus trámites' : 'Solicitud enviada'}
+                : step === 'services' ? 'Selecciona tus trámites' : 'Trámites listos para enviar'}
           </h2>
           <p>
             {step === 'register'
@@ -378,7 +376,7 @@ function ApplicationForm() {
                 ? 'Tu cuenta ya está lista. Puedes elegir tus trámites ahora o iniciar sesión más adelante.'
                 : step === 'services'
                   ? 'Elige uno o más trámites y adjunta sus documentos.'
-                  : 'Ya recibimos tu consulta.'}
+                  : 'Tus datos y trámites quedaron guardados en la plataforma. Para contactar con nosotros, revisa y envía el mensaje por WhatsApp.'}
           </p>
         </div>
 
@@ -709,7 +707,7 @@ function ApplicationForm() {
           <div className="application-form application-complete" role="status">
             <CheckCircle2 className="application-complete__icon" size={35} aria-hidden="true" />
             <div className="application-complete__content">
-              <h3>Tu consulta #{applicationId} será analizada en un plazo de 72 horas.</h3>
+              <h3>Tus trámites quedaron guardados en la plataforma</h3>
               <p className="application-complete__label">Trámites solicitados</p>
               <ul className="application-complete__services">
                 {selectedServices.map((serviceValue) => {
@@ -738,11 +736,11 @@ function ApplicationForm() {
               </div>
               <div className="application-complete__contact">
                 <div>
-                  <strong>¿Qué sigue?</strong>
-                  <p>Los tiempos y precios se confirmarán al revisar tu solicitud. Para continuar, contacta con nosotros.</p>
+                  <strong>Falta enviarlos por WhatsApp</strong>
+                  <p>Abre WhatsApp, revisa el mensaje preparado y pulsa enviar para que podamos recibir tu consulta. Los tiempos y precios se confirmarán al revisarla.</p>
                 </div>
                 <a className="phone-contact__link" href={`https://wa.me/5358049659?text=${encodeURIComponent(whatsappMessage)}`} target="_blank" rel="noreferrer">
-                  <MessageCircle size={17} aria-hidden="true" /> Contactar
+                  <MessageCircle size={17} aria-hidden="true" /> Abrir WhatsApp
                 </a>
               </div>
             </div>
