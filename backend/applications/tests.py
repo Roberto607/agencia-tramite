@@ -129,6 +129,7 @@ class ApplicationApiTests(APITestCase):
                 "last_names": "Apellido manipulado",
                 "identification_type": "otro",
                 "identification_number": "999",
+                "country": "España",
                 "email": "otra@example.com",
                 "phone": "+1 555 000 0000",
                 "selected_services": '["certificacion_nacimiento","traducciones_certificadas"]',
@@ -150,7 +151,7 @@ class ApplicationApiTests(APITestCase):
         application = Application.objects.get(pk=application_response.data["id"])
         self.assertEqual(application.user, user)
         self.assertEqual(application.first_names, "Ana María")
-        self.assertEqual(application.country, "Cuba")
+        self.assertEqual(application.country, "España")
         self.assertEqual(application.last_names, "Pérez López")
         self.assertEqual(application.identification_number, "123456789")
         self.assertEqual(application.email, "ana@example.com")
@@ -372,6 +373,7 @@ class ApplicationApiTests(APITestCase):
                 "last_names": "Pérez López",
                 "identification_type": "cedula",
                 "identification_number": "123456789",
+                "country": "Cuba",
                 "email": "ana@example.com",
                 "phone": "+57 300 123 4567",
                 "documents": documents,
@@ -393,6 +395,7 @@ class ApplicationApiTests(APITestCase):
                 "last_names": "Pérez",
                 "identification_type": "cedula",
                 "identification_number": "123456789",
+                "country": "Cuba",
                 "email": "ana@example.com",
                 "selected_services": '["certificacion_nacimiento","traducciones_certificadas"]',
                 "selected_options": (
@@ -421,6 +424,23 @@ class ApplicationApiTests(APITestCase):
             6000,
         )
 
+    def test_create_application_requires_country(self):
+        response = self.client.post(
+            reverse("application-create"),
+            {
+                "first_names": "Ana",
+                "last_names": "Pérez",
+                "identification_type": "cedula",
+                "identification_number": "123456789",
+                "email": "ana@example.com",
+                "selected_services": '["certificacion_nacimiento"]',
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("country", response.data)
+
     def test_create_application_requires_details_when_other_service_is_selected(self):
         response = self.client.post(
             reverse("application-create"),
@@ -429,6 +449,7 @@ class ApplicationApiTests(APITestCase):
                 "last_names": "Pérez",
                 "identification_type": "cedula",
                 "identification_number": "123456789",
+                "country": "Cuba",
                 "email": "ana@example.com",
                 "selected_services": '["certificacion_nacimiento","otros"]',
             },

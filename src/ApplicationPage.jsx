@@ -354,11 +354,11 @@ function CountrySearch({ value, onChange }) {
         <input
           aria-activedescendant={isOpen && filteredCountries[activeIndex] ? `country-option-${activeIndex}` : undefined}
           aria-autocomplete="list"
-          aria-controls="registration-country-options"
-          aria-describedby="registration-country-hint"
+          aria-controls="application-country-options"
+          aria-describedby="application-country-hint"
           aria-expanded={isOpen}
           autoComplete="country-name"
-          id="registration-country"
+          id="application-country"
           name="country"
           onChange={(event) => {
             const country = event.target.value
@@ -391,7 +391,7 @@ function CountrySearch({ value, onChange }) {
         </button>
       </div>
       {isOpen && (
-        <ul className="country-search__options" id="registration-country-options" role="listbox">
+        <ul className="country-search__options" id="application-country-options" role="listbox">
           {filteredCountries.length
             ? filteredCountries.map((country, index) => (
               <li
@@ -409,7 +409,7 @@ function CountrySearch({ value, onChange }) {
             : <li className="country-search__empty" role="presentation">No se encontraron países.</li>}
         </ul>
       )}
-      <span className="field-hint" id="registration-country-hint">Escribe para filtrar o toca la flecha para ver la lista.</span>
+      <span className="field-hint" id="application-country-hint">Escribe para filtrar o toca la flecha para ver la lista.</span>
     </div>
   )
 }
@@ -425,12 +425,12 @@ function ApplicationForm() {
     last_names: '',
     identification_type: '',
     identification_number: '',
-    country: '',
     phone: '',
     email: '',
     password: '',
   })
   const [authToken, setAuthToken] = useState('')
+  const [applicationCountry, setApplicationCountry] = useState('')
   const [selectedServices, setSelectedServices] = useState([])
   const [selectedPricingOptions, setSelectedPricingOptions] = useState({})
   const [serviceDocuments, setServiceDocuments] = useState({})
@@ -468,7 +468,7 @@ function ApplicationForm() {
   const whatsappMessage = [
     'Hola, quiero solicitar estos trámites:',
     `Nombre: ${[profile.first_names, profile.last_names].filter(Boolean).join(' ') || 'No indicado'}.`,
-    ...(profile.country ? [`País: ${profile.country}.`] : []),
+    `País donde realizaré el trámite: ${applicationCountry}.`,
     '',
     'Trámites solicitados:',
     ...selectedServices.flatMap((serviceValue) => {
@@ -588,7 +588,8 @@ function ApplicationForm() {
         body: JSON.stringify(loginCredentials),
       }))
       setAuthToken(result.token)
-      setProfile({ ...result.profile, password: '' })
+      const { country: _country, ...clientProfile } = result.profile
+      setProfile({ ...clientProfile, password: '' })
       setStep('services')
     } catch (error) {
       setSubmissionError(error instanceof Error ? error.message : 'No se pudo iniciar sesión.')
@@ -601,6 +602,10 @@ function ApplicationForm() {
     event.preventDefault()
     if (selectedServices.length === 0) {
       setSubmissionError('Selecciona al menos un trámite.')
+      return
+    }
+    if (!countries.includes(applicationCountry)) {
+      setSubmissionError('Selecciona el país donde realizarás el trámite.')
       return
     }
     const serviceMissingOptions = selectedServices.find((serviceValue) => {
@@ -619,6 +624,7 @@ function ApplicationForm() {
     Object.entries(profile).forEach(([field, value]) => {
       if (field !== 'password') formData.set(field, value)
     })
+    formData.set('country', applicationCountry)
     formData.set('selected_services', JSON.stringify(selectedServices))
     formData.set('selected_options', JSON.stringify(selectedPricingDetails))
     selectedServices.forEach((service) => {
@@ -714,13 +720,6 @@ function ApplicationForm() {
                 <span>Número de identificación <span className="required-mark">*</span></span>
                 <input autoComplete="off" name="identification_number" onChange={(event) => setProfile({ ...profile, identification_number: event.target.value })} placeholder="Número de documento" required value={profile.identification_number} />
               </label>
-              <div className="form-field">
-                <label htmlFor="registration-country">País <span className="required-mark">*</span></label>
-                <CountrySearch
-                  onChange={(country) => setProfile((current) => ({ ...current, country }))}
-                  value={profile.country}
-                />
-              </div>
               <label className="form-field">
                 <span>Teléfono <span className="required-mark">*</span></span>
                 <input autoComplete="tel" name="phone" onChange={(event) => setProfile({ ...profile, phone: event.target.value })} placeholder="+53 58049659" required type="tel" value={profile.phone} />
@@ -965,6 +964,14 @@ function ApplicationForm() {
                   ))}
                 </div>
               </fieldset>
+
+              <div className="form-field form-field--full">
+                <label htmlFor="application-country">País donde realizarás el trámite <span className="required-mark">*</span></label>
+                <CountrySearch
+                  onChange={setApplicationCountry}
+                  value={applicationCountry}
+                />
+              </div>
 
               {selectedServices.length > 0 && (
                 <section className="service-summary form-field form-field--full" aria-label="Resumen de trámites seleccionados">

@@ -60,6 +60,7 @@ class ClientRegistrationSerializer(serializers.Serializer):
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
+    country = serializers.CharField(max_length=80)
     photo = serializers.ImageField(required=False, allow_null=True, write_only=True)
     selected_services = serializers.JSONField(required=False)
     selected_options = serializers.JSONField(required=False)
@@ -184,7 +185,6 @@ class ApplicationSerializer(serializers.ModelSerializer):
                         last_names=request.user.last_name,
                         identification_type=client_profile.identification_type,
                         identification_number=client_profile.identification_number,
-                        country=client_profile.country,
                         email=request.user.email,
                         phone=client_profile.phone,
                     )
