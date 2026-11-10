@@ -294,10 +294,38 @@ const serviceCatalog = [
       { id: 'traduccion', label: 'Traducción certificada', options: [{ id: 'traduccion', label: 'Traducción certificada', time: '1–5 días', price: 30, currency: 'USD' }] },
     ],
   },
-  { value: 'apostillamiento_consulado', label: 'Apostillamiento Consulado', note: 'El tiempo y el costo dependen del consulado. Te brindaremos los detalles al contactarnos.' },
+  { value: 'apostillamiento_consulado', label: 'Apostillamiento Consulado', note: 'El costo depende del país y del tipo de documento.' },
   { value: 'asesoramiento_empresarial', label: 'Asesoramiento empresarial: Pymes, TCP, CNA y otros actores económicos', note: 'Tiempo y costo se informan al revisar tu consulta.' },
   { value: 'otros', label: 'Otros', note: 'Te confirmaremos el tiempo y el costo según el trámite que necesitas.' },
 ]
+
+const apostilleTariffs = {
+  España: {
+    management: { price: 55, currency: 'EUR' },
+    documents: [{ id: 'documento', label: 'Documento', price: 10, currency: 'EUR' }],
+  },
+  Italia: {
+    management: { price: 55, currency: 'EUR' },
+    documents: [
+      { id: 'nacimiento', label: 'Certificado de nacimiento', price: 25, currency: 'EUR' },
+      { id: 'antecedentes', label: 'Antecedentes penales', price: 37, currency: 'EUR' },
+      { id: 'estudios', label: 'Documento de estudios', price: 41, currency: 'EUR' },
+      { id: 'matrimonio_transcripcion', label: 'Documento de matrimonio con transcripción', price: 85, currency: 'EUR' },
+    ],
+  },
+  México: {
+    management: { price: 60, currency: 'USD' },
+    documents: [{ id: 'documento', label: 'Documento', price: 54, currency: 'USD' }],
+  },
+  Uruguay: {
+    management: { price: 50, currency: 'USD' },
+    documents: [
+      { id: 'estudios', label: 'Título de estudios', price: 45, currency: 'EUR' },
+      { id: 'poder_especial', label: 'Poder especial', price: 120, currency: 'EUR' },
+      { id: 'resto_documentos', label: 'Resto de documentos', price: 15, currency: 'EUR' },
+    ],
+  },
+}
 
 function formatFileSize(bytes) {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
@@ -432,38 +460,71 @@ function ApplicationForm() {
   const [authToken, setAuthToken] = useState('')
   const [applicationCountry, setApplicationCountry] = useState('')
   const [selectedServices, setSelectedServices] = useState([])
+  const [apostilleDocumentCounts, setApostilleDocumentCounts] = useState({})
   const [selectedPricingOptions, setSelectedPricingOptions] = useState({})
   const [serviceDocuments, setServiceDocuments] = useState({})
   const [otherServiceDescription, setOtherServiceDescription] = useState('')
   const [submissionError, setSubmissionError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRefs = useRef({})
-  const selectedPricingDetails = serviceCatalog.flatMap((service) =>
-    (service.pricingGroups ?? []).flatMap((group) => {
-      const optionId = selectedPricingOptions[service.value]?.[group.id]
-      const option = group.options.find((item) => item.id === optionId)
-      return option ? [{
-        service: service.value,
-        service_label: service.label,
-        group: group.label,
-        option: option.label,
-        time: option.time,
-        price: option.price,
-        currency: option.currency,
-      }] : []
-    }),
-  )
+  const apostilleTariff = apostilleTariffs[applicationCountry]
+  const apostillePricingDetails = selectedServices.includes('apostillamiento_consulado') && apostilleTariff
+    ? [
+      {
+        service: 'apostillamiento_consulado',
+        service_label: 'Apostillamiento Consulado',
+        group: 'Gestión consular',
+        option: 'Una solicitud',
+        time: 'No aplica',
+        price: apostilleTariff.management.price,
+        currency: apostilleTariff.management.currency,
+      },
+      ...apostilleTariff.documents.flatMap((document) => {
+        const quantity = apostilleDocumentCounts[`${applicationCountry}:${document.id}`] ?? 0
+        return quantity > 0 ? [{
+          service: 'apostillamiento_consulado',
+          service_label: 'Apostillamiento Consulado',
+          group: 'Documentos',
+          option: `${quantity} × ${document.label} (${formatPrice(document)} c/u)`,
+          time: 'No aplica',
+          price: quantity * document.price,
+          currency: document.currency,
+        }] : []
+      }),
+    ]
+    : []
+  const selectedPricingDetails = [
+    ...serviceCatalog.flatMap((service) =>
+      (service.pricingGroups ?? []).flatMap((group) => {
+        const optionId = selectedPricingOptions[service.value]?.[group.id]
+        const option = group.options.find((item) => item.id === optionId)
+        return option ? [{
+          service: service.value,
+          service_label: service.label,
+          group: group.label,
+          option: option.label,
+          time: option.time,
+          price: option.price,
+          currency: option.currency,
+        }] : []
+      }),
+    ),
+    ...apostillePricingDetails,
+  ]
   const totals = selectedPricingDetails.reduce((result, option) => {
     if (option.currency) result[option.currency] = (result[option.currency] ?? 0) + option.price
     return result
   }, {})
   const hasUnpricedSelection = selectedPricingDetails.some((option) => option.price == null)
   const hasCustomPricedServices = selectedServices.some((serviceValue) =>
-    !serviceCatalog.find((service) => service.value === serviceValue)?.pricingGroups,
+    serviceValue === 'apostillamiento_consulado'
+      ? !apostilleTariff
+      : !serviceCatalog.find((service) => service.value === serviceValue)?.pricingGroups,
   )
   const formattedTotal = [
     totals.CUP ? `${new Intl.NumberFormat('es-CU').format(totals.CUP)} CUP` : '',
     totals.USD ? `${new Intl.NumberFormat('en-US').format(totals.USD)} USD` : '',
+    totals.EUR ? `${new Intl.NumberFormat('es-ES').format(totals.EUR)} EUR` : '',
   ].filter(Boolean).join(' + ') || 'Pendiente de cotización'
   const whatsappMessage = [
     'Hola, quiero solicitar estos trámites:',
@@ -617,6 +678,16 @@ function ApplicationForm() {
       const service = serviceCatalog.find((item) => item.value === serviceMissingOptions)
       setSubmissionError(`Selecciona al menos una opción para ${service?.label}.`)
       return
+    }
+    if (selectedServices.includes('apostillamiento_consulado') && apostilleTariff) {
+      const documentCount = apostilleTariff.documents.reduce(
+        (total, document) => total + (apostilleDocumentCounts[`${applicationCountry}:${document.id}`] ?? 0),
+        0,
+      )
+      if (documentCount < 1) {
+        setSubmissionError('Indica la cantidad de documentos para el apostillamiento.')
+        return
+      }
     }
 
     const formElement = event.currentTarget
@@ -843,6 +914,14 @@ function ApplicationForm() {
         {step === 'services' && (
           <form className="application-form" onSubmit={handleApplicationSubmit} aria-busy={isSubmitting}>
             <div className="form-grid">
+              <div className="form-field form-field--full">
+                <label htmlFor="application-country">País donde realizarás el trámite <span className="required-mark">*</span></label>
+                <CountrySearch
+                  onChange={setApplicationCountry}
+                  value={applicationCountry}
+                />
+              </div>
+
               <fieldset className="form-field form-field--full service-selection">
                 <legend>Selecciona los trámites que necesitas <span className="required-mark">*</span></legend>
                 <p className="service-selection__hint">Puedes marcar más de uno.</p>
@@ -935,7 +1014,46 @@ function ApplicationForm() {
                                 ))}
                               </div>
                             )}
-                            {isSelected && note && <p className="service-option__note">{note}</p>}
+                            {isSelected && value === 'apostillamiento_consulado' && apostilleTariff && (
+                              <div className="service-option__apostille-pricing">
+                                <p>
+                                  <strong>Gestión consular:</strong>{' '}
+                                  {formatPrice(apostilleTariff.management)} (se cobra una vez por solicitud)
+                                </p>
+                                {apostilleTariff.documents.map((document) => {
+                                  const countKey = `${applicationCountry}:${document.id}`
+                                  return (
+                                    <label className="service-option__quantity-field" key={document.id}>
+                                      <span>{document.label} · {formatPrice(document)} por documento</span>
+                                      <input
+                                        aria-label={`Cantidad de ${document.label}`}
+                                        inputMode="numeric"
+                                        min="0"
+                                        onChange={(event) => {
+                                          const quantity = Number.parseInt(event.target.value, 10)
+                                          setApostilleDocumentCounts((current) => ({
+                                            ...current,
+                                            [countKey]: Number.isFinite(quantity) && quantity > 0 ? quantity : 0,
+                                          }))
+                                        }}
+                                        placeholder="0"
+                                        step="1"
+                                        type="number"
+                                        value={apostilleDocumentCounts[countKey] || ''}
+                                      />
+                                    </label>
+                                  )
+                                })}
+                              </div>
+                            )}
+                            {isSelected && value === 'apostillamiento_consulado' && !apostilleTariff && (
+                              <p className="service-option__note">
+                                El precio de este consulado aún no está publicado. Se confirmará al revisar tu solicitud.
+                              </p>
+                            )}
+                            {isSelected && note && value !== 'apostillamiento_consulado' && (
+                              <p className="service-option__note">{note}</p>
+                            )}
                             {documents.length > 0 && (
                               <ul className="service-option__files" aria-label={`Archivos para ${label}`}>
                                 {documents.map(({ id, file, fileType }) => (
@@ -964,14 +1082,6 @@ function ApplicationForm() {
                   ))}
                 </div>
               </fieldset>
-
-              <div className="form-field form-field--full">
-                <label htmlFor="application-country">País donde realizarás el trámite <span className="required-mark">*</span></label>
-                <CountrySearch
-                  onChange={setApplicationCountry}
-                  value={applicationCountry}
-                />
-              </div>
 
               {selectedServices.length > 0 && (
                 <section className="service-summary form-field form-field--full" aria-label="Resumen de trámites seleccionados">

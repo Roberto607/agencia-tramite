@@ -140,6 +140,11 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .service-option__pricing { display: grid; grid-template-columns: minmax(0, 1fr); gap: 9px; margin: 10px 0 2px; padding-top: 10px; border-top: 1px solid #dce5f1; }
 .service-option__price-field { min-width: 0; display: flex; flex-direction: column; gap: 5px; color: #536780; font-size: 11px; font-weight: 700; }
 .service-option__price-field select { width: 100%; min-width: 0; min-height: 40px; padding: 6px 10px; border: 1px solid #cbd6e5; border-radius: 4px; background: #fff; color: #173456; font: inherit; font-size: 13px; }
+.service-option__apostille-pricing { display: grid; gap: 9px; margin: 10px 0 2px; padding-top: 10px; border-top: 1px solid #dce5f1; }
+.service-option__apostille-pricing > p { margin: 0; color: #536780; font-size: 12px; }
+.service-option__quantity-field { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #536780; font-size: 12px; }
+.service-option__quantity-field input { width: 78px; min-height: 38px; flex: 0 0 78px; padding: 5px 8px; appearance: auto; -webkit-appearance: auto; border: 1px solid #cbd6e5; border-radius: 4px; background: #fff; color: #173456; font: inherit; font-size: 14px; }
+.service-option__quantity-field input:focus { border-color: #1260df; outline: 2px solid rgba(18, 96, 223, .18); outline-offset: 1px; }
 .service-option__note { margin: 9px 0 2px; padding-top: 9px; border-top: 1px solid #dce5f1; color: #536780; font-size: 12px; font-weight: 400; }
 .service-summary { padding: 16px; border: 1px solid #cbdcf3; border-radius: 5px; background: #f5f8fd; }
 .service-summary h3 { margin: 0 0 10px; color: #0c2851; font-size: 16px; }
@@ -155,15 +160,15 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .service-upload-button:hover { border-color: #c6d8f2; background: #e8f0fc; color: #1260df; }
 .service-upload-button:focus-visible { outline: 2px solid #1260df; outline-offset: 1px; }
 .service-option__files { margin: 8px 0 0; padding: 5px 0 0; border-top: 1px solid #dce5f1; list-style: none; }
-.service-option input { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; flex: 0 0 17px; margin: 0; display: grid; place-content: center; border: 1px solid #8794a5; border-radius: 3px; background: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.service-option input::before { content: ''; width: 8px; height: 4px; border-bottom: 2px solid #fff; border-left: 2px solid #fff; transform: rotate(-45deg) scale(0); }
-.service-option input:checked { border-color: #1260df; background: #1260df; }
-.service-option input:checked::before { transform: rotate(-45deg) scale(1); }
+.service-option input[type="checkbox"] { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; flex: 0 0 17px; margin: 0; display: grid; place-content: center; border: 1px solid #8794a5; border-radius: 3px; background: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.service-option input[type="checkbox"]::before { content: ''; width: 8px; height: 4px; border-bottom: 2px solid #fff; border-left: 2px solid #fff; transform: rotate(-45deg) scale(0); }
+.service-option input[type="checkbox"]:checked { border-color: #1260df; background: #1260df; }
+.service-option input[type="checkbox"]:checked::before { transform: rotate(-45deg) scale(1); }
 .service-option:focus-within { outline: none !important; box-shadow: none !important; }
-.service-option:has(input:focus-visible) { outline: 2px solid #1260df; outline-offset: 2px; }
-.service-option input:focus,
-.service-option input:focus-visible,
-.service-option input:active { outline: none !important; box-shadow: none !important; }
+.service-option:has(input[type="checkbox"]:focus-visible) { outline: 2px solid #1260df; outline-offset: 2px; }
+.service-option input[type="checkbox"]:focus,
+.service-option input[type="checkbox"]:focus-visible,
+.service-option input[type="checkbox"]:active { outline: none !important; box-shadow: none !important; }
 .form-field:nth-child(2) { animation-delay: 320ms; }
 .form-field:nth-child(3) { animation-delay: 380ms; }
 .form-field:nth-child(4) { animation-delay: 440ms; }

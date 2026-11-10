@@ -441,6 +441,38 @@ class ApplicationApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("country", response.data)
 
+    def test_create_application_stores_apostille_fee_details(self):
+        response = self.client.post(
+            reverse("application-create"),
+            {
+                "first_names": "Ana",
+                "last_names": "Pérez",
+                "identification_type": "cedula",
+                "identification_number": "123456789",
+                "country": "Italia",
+                "email": "ana@example.com",
+                "selected_services": '["apostillamiento_consulado"]',
+                "selected_options": (
+                    '[{"service":"apostillamiento_consulado",'
+                    '"service_label":"Apostillamiento Consulado",'
+                    '"group":"Gestión consular","option":"Una solicitud",'
+                    '"time":"No aplica","price":55,"currency":"EUR"},'
+                    '{"service":"apostillamiento_consulado",'
+                    '"service_label":"Apostillamiento Consulado",'
+                    '"group":"Documentos","option":"2 × Certificado de nacimiento",'
+                    '"time":"No aplica","price":50,"currency":"EUR"}]'
+                ),
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        application = Application.objects.get(pk=response.data["id"])
+        self.assertEqual(application.country, "Italia")
+        self.assertEqual(len(application.selected_options), 2)
+        self.assertEqual(application.selected_options[0]["price"], 55)
+        self.assertEqual(application.selected_options[1]["currency"], "EUR")
+
     def test_create_application_requires_details_when_other_service_is_selected(self):
         response = self.client.post(
             reverse("application-create"),
