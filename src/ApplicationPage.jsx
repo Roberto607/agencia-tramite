@@ -949,7 +949,6 @@ function ApplicationForm() {
                         const documents = serviceDocuments[value] ?? []
                         const isConsularSelected = consularServices.includes(value)
                         const consularDocumentTariff = getConsularDocumentTariff(applicationCountry, value)
-                        const isFirstConsularService = selectedConsularServices[0] === value
                         const photoInputKey = `${value}-photo`
                         const documentInputKey = `${value}-document`
 
@@ -1049,14 +1048,12 @@ function ApplicationForm() {
                                 {isConsularSelected && (
                                   <div className="service-option__consular-pricing">
                                     <p>País del consulado: <strong>{applicationCountry || 'selecciona un país arriba'}</strong></p>
-                                    {isFirstConsularService && (
-                                      <p>
-                                        Gestión consular (una vez):{' '}
-                                        <strong>{apostilleTariff?.management
-                                          ? formatPrice(apostilleTariff.management)
-                                          : 'Precio por confirmar'}</strong>
-                                      </p>
-                                    )}
+                                    <p>
+                                      Gestión consular (se cobra una sola vez por solicitud):{' '}
+                                      <strong>{apostilleTariff?.management
+                                        ? formatPrice(apostilleTariff.management)
+                                        : 'Precio por confirmar'}</strong>
+                                    </p>
                                     <p>
                                       Costo del documento:{' '}
                                       <strong>{consularDocumentTariff
