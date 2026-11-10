@@ -935,7 +935,10 @@ function ApplicationForm() {
                 <legend>Selecciona los trámites que necesitas <span className="required-mark">*</span></legend>
                 <p className="service-selection__hint">Puedes marcar más de uno.</p>
                 <div className="service-selection__options">
-                  {serviceCatalog.map(({ value, label, pricingGroups, note }) => {
+                  {[0, 1].map((columnIndex) => (
+                    <div className="service-selection__column" key={columnIndex}>
+                      {serviceCatalog.map(({ value, label, pricingGroups, note }, serviceIndex) => {
+                        if (serviceIndex % 2 !== columnIndex) return null
                         const isSelected = selectedServices.includes(value)
                         const documents = serviceDocuments[value] ?? []
                         const isConsularSelected = consularServices.includes(value)
@@ -948,6 +951,7 @@ function ApplicationForm() {
                           <div
                             className={`service-option${isSelected ? ' service-option--selected' : ''}`}
                             key={value}
+                            style={{ order: serviceIndex }}
                           >
                             <div className="service-option__row">
                               <label className="service-option__choice">
@@ -1088,7 +1092,9 @@ function ApplicationForm() {
                             )}
                           </div>
                         )
-                  })}
+                      })}
+                    </div>
+                  ))}
                 </div>
               </fieldset>
 
@@ -1108,7 +1114,7 @@ function ApplicationForm() {
                                 {option.group}: {option.option} · {option.time} · {formatPrice(option)}
                               </li>
                             ))}</ul>
-                            : <span>{service?.note ?? 'Selecciona las opciones de servicio que necesitas.'}</span>}
+                            : <span className="service-summary__pending">{service?.note ?? 'Selecciona las opciones de servicio que necesitas.'}</span>}
                         </li>
                       )
                     })}
