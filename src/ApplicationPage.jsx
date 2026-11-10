@@ -1000,92 +1000,92 @@ function ApplicationForm() {
                                 </button>
                               </div>
                             </div>
-                            {isSelected && pricingGroups && (
-                              <div className="service-option__pricing">
-                                {pricingGroups.map((group) => (
-                                  <label className="service-option__price-field" key={group.id}>
-                                    <span>{group.label}</span>
-                                    <select
-                                      onChange={(event) => setSelectedPricingOptions((current) => ({
-                                        ...current,
-                                        [value]: { ...current[value], [group.id]: event.target.value },
-                                      }))}
-                                      value={selectedPricingOptions[value]?.[group.id] ?? ''}
-                                    >
-                                      <option value="">No incluir</option>
-                                      {group.options.map((option) => (
-                                        <option key={option.id} value={option.id}>
-                                          {option.label} · {option.time} · {formatPrice(option)}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </label>
-                                ))}
-                              </div>
-                            )}
                             {isSelected && (
-                              <label className="service-option__consular-toggle">
-                                <input
-                                  checked={isConsularSelected}
-                                  onChange={(event) => setConsularServices((current) => (
-                                    event.target.checked
-                                      ? [...current, value]
-                                      : current.filter((service) => service !== value)
-                                  ))}
-                                  type="checkbox"
-                                />
-                                <span>Legalizar este trámite en consulado</span>
-                              </label>
-                            )}
-                            {isSelected && isConsularSelected && (
-                              <div className="service-option__consular-pricing">
-                                <p>País del consulado: <strong>{applicationCountry || 'selecciona un país arriba'}</strong></p>
-                                {isFirstConsularService && (
-                                  <p>
-                                    Gestión consular (una vez):{' '}
-                                    <strong>{apostilleTariff?.management
-                                      ? formatPrice(apostilleTariff.management)
-                                      : 'Precio por confirmar'}</strong>
-                                  </p>
+                              <div className={`service-option__details service-option__details--${columnIndex === 0 ? 'left' : 'right'}`}>
+                                {pricingGroups && (
+                                  <div className="service-option__pricing">
+                                    {pricingGroups.map((group) => (
+                                      <label className="service-option__price-field" key={group.id}>
+                                        <span>{group.label}</span>
+                                        <select
+                                          onChange={(event) => setSelectedPricingOptions((current) => ({
+                                            ...current,
+                                            [value]: { ...current[value], [group.id]: event.target.value },
+                                          }))}
+                                          value={selectedPricingOptions[value]?.[group.id] ?? ''}
+                                        >
+                                          <option value="">No incluir</option>
+                                          {group.options.map((option) => (
+                                            <option key={option.id} value={option.id}>
+                                              {option.label} · {option.time} · {formatPrice(option)}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </label>
+                                    ))}
+                                  </div>
                                 )}
-                                <p>
-                                  {documents.length
-                                    ? `${documents.length} documento${documents.length === 1 ? '' : 's'} adjunto${documents.length === 1 ? '' : 's'} · `
-                                    : 'Adjunta el documento para calcular el costo consular.'}
-                                  {documents.length > 0 && (
-                                    consularDocumentTariff
-                                      ? `${formatPrice(consularDocumentTariff)} por documento · ${formatPrice({
-                                        price: documents.length * consularDocumentTariff.price,
-                                        currency: consularDocumentTariff.currency,
-                                      })} total`
-                                      : 'Precio del documento por confirmar'
-                                  )}
-                                </p>
+                                <label className="service-option__consular-toggle">
+                                  <input
+                                    checked={isConsularSelected}
+                                    onChange={(event) => setConsularServices((current) => (
+                                      event.target.checked
+                                        ? [...current, value]
+                                        : current.filter((service) => service !== value)
+                                    ))}
+                                    type="checkbox"
+                                  />
+                                  <span>Legalizar este trámite en consulado</span>
+                                </label>
+                                {isConsularSelected && (
+                                  <div className="service-option__consular-pricing">
+                                    <p>País del consulado: <strong>{applicationCountry || 'selecciona un país arriba'}</strong></p>
+                                    {isFirstConsularService && (
+                                      <p>
+                                        Gestión consular (una vez):{' '}
+                                        <strong>{apostilleTariff?.management
+                                          ? formatPrice(apostilleTariff.management)
+                                          : 'Precio por confirmar'}</strong>
+                                      </p>
+                                    )}
+                                    <p>
+                                      {documents.length
+                                        ? `${documents.length} documento${documents.length === 1 ? '' : 's'} adjunto${documents.length === 1 ? '' : 's'} · `
+                                        : 'Adjunta el documento para calcular el costo consular.'}
+                                      {documents.length > 0 && (
+                                        consularDocumentTariff
+                                          ? `${formatPrice(consularDocumentTariff)} por documento · ${formatPrice({
+                                            price: documents.length * consularDocumentTariff.price,
+                                            currency: consularDocumentTariff.currency,
+                                          })} total`
+                                          : 'Precio del documento por confirmar'
+                                      )}
+                                    </p>
+                                  </div>
+                                )}
+                                {note && <p className="service-option__note">{note}</p>}
+                                {documents.length > 0 && (
+                                  <ul className="service-option__files" aria-label={`Archivos para ${label}`}>
+                                    {documents.map(({ id, file, fileType }) => (
+                                      <li className="document-item" key={id}>
+                                        {fileType === 'photo'
+                                          ? <ImagePlus size={17} aria-hidden="true" />
+                                          : <FileText size={17} aria-hidden="true" />}
+                                        <span className="document-item__name">{file.name}</span>
+                                        <span className="document-item__size">{formatFileSize(file.size)}</span>
+                                        <button
+                                          aria-label={`Quitar ${file.name}`}
+                                          className="remove-file-button"
+                                          onClick={() => removeServiceDocument(value, id)}
+                                          type="button"
+                                        >
+                                          <Trash2 size={17} aria-hidden="true" />
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
                               </div>
-                            )}
-                            {isSelected && note && (
-                              <p className="service-option__note">{note}</p>
-                            )}
-                            {documents.length > 0 && (
-                              <ul className="service-option__files" aria-label={`Archivos para ${label}`}>
-                                {documents.map(({ id, file, fileType }) => (
-                                  <li className="document-item" key={id}>
-                                    {fileType === 'photo'
-                                      ? <ImagePlus size={17} aria-hidden="true" />
-                                      : <FileText size={17} aria-hidden="true" />}
-                                    <span className="document-item__name">{file.name}</span>
-                                    <span className="document-item__size">{formatFileSize(file.size)}</span>
-                                    <button
-                                      aria-label={`Quitar ${file.name}`}
-                                      className="remove-file-button"
-                                      onClick={() => removeServiceDocument(value, id)}
-                                      type="button"
-                                    >
-                                      <Trash2 size={17} aria-hidden="true" />
-                                    </button>
-                                  </li>
-                                ))}
-                              </ul>
                             )}
                           </div>
                         )
