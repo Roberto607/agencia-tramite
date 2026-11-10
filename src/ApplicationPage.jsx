@@ -545,6 +545,12 @@ function ApplicationForm() {
           `  - ${option.group}: ${option.option} | ${option.time} | ${formatPrice(option)}`,
         )
         : [`  - ${service?.note ?? 'Tiempo y costo por confirmar.'}`]
+      if (consularServices.includes(serviceValue)) {
+        const documentTariff = getConsularDocumentTariff(applicationCountry, serviceValue)
+        details.push(
+          `  - Costo consular por documento: ${documentTariff ? `${formatPrice(documentTariff)} cada uno` : 'Precio por confirmar'}.`,
+        )
+      }
       if (serviceValue === 'otros' && otherServiceDescription.trim()) {
         details.push(`  - Detalle: ${otherServiceDescription.trim()}`)
       }
@@ -1105,15 +1111,28 @@ function ApplicationForm() {
                     {selectedServices.map((serviceValue) => {
                       const service = serviceCatalog.find((item) => item.value === serviceValue)
                       const options = selectedPricingDetails.filter((item) => item.service === serviceValue)
+                      const consularSelected = consularServices.includes(serviceValue)
+                      const documentTariff = consularSelected
+                        ? getConsularDocumentTariff(applicationCountry, serviceValue)
+                        : null
                       return (
                         <li key={serviceValue}>
                           <strong>{service?.label}</strong>
-                          {options.length > 0
-                            ? <ul>{options.map((option) => (
+                          {options.length > 0 || consularSelected
+                            ? <ul>
+                              {options.map((option) => (
                               <li key={`${option.group}-${option.option}`}>
                                 {option.group}: {option.option} · {option.time} · {formatPrice(option)}
                               </li>
-                            ))}</ul>
+                              ))}
+                              {consularSelected && (
+                                <li key="consular-document-unit-price">
+                                  Costo consular por documento: {documentTariff
+                                    ? `${formatPrice(documentTariff)} cada uno`
+                                    : 'Precio por confirmar'}
+                                </li>
+                              )}
+                            </ul>
                             : <span className="service-summary__pending">{service?.note ?? 'Selecciona las opciones de servicio que necesitas.'}</span>}
                         </li>
                       )
