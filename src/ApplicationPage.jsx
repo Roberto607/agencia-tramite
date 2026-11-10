@@ -926,16 +926,16 @@ function ApplicationForm() {
                   onChange={setApplicationCountry}
                   value={applicationCountry}
                 />
+                <span className="field-hint">
+                  Para sumar costos consulares, selecciona el país, marca «Legalizar este trámite en consulado» y adjunta el documento.
+                </span>
               </div>
 
               <fieldset className="form-field form-field--full service-selection">
                 <legend>Selecciona los trámites que necesitas <span className="required-mark">*</span></legend>
                 <p className="service-selection__hint">Puedes marcar más de uno.</p>
                 <div className="service-selection__options">
-                  {[0, 1].map((columnIndex) => (
-                    <div className="service-selection__column" key={columnIndex}>
-                      {serviceCatalog.map(({ value, label, pricingGroups, note }, serviceIndex) => {
-                        if (serviceIndex % 2 !== columnIndex) return null
+                  {serviceCatalog.map(({ value, label, pricingGroups, note }) => {
                         const isSelected = selectedServices.includes(value)
                         const documents = serviceDocuments[value] ?? []
                         const isConsularSelected = consularServices.includes(value)
@@ -948,7 +948,6 @@ function ApplicationForm() {
                           <div
                             className={`service-option${isSelected ? ' service-option--selected' : ''}`}
                             key={value}
-                            style={{ order: serviceIndex }}
                           >
                             <div className="service-option__row">
                               <label className="service-option__choice">
@@ -1001,7 +1000,7 @@ function ApplicationForm() {
                               </div>
                             </div>
                             {isSelected && (
-                              <div className={`service-option__details service-option__details--${columnIndex === 0 ? 'left' : 'right'}`}>
+                              <div className="service-option__details">
                                 {pricingGroups && (
                                   <div className="service-option__pricing">
                                     {pricingGroups.map((group) => (
@@ -1049,17 +1048,17 @@ function ApplicationForm() {
                                       </p>
                                     )}
                                     <p>
-                                      {documents.length
-                                        ? `${documents.length} documento${documents.length === 1 ? '' : 's'} adjunto${documents.length === 1 ? '' : 's'} · `
-                                        : 'Adjunta el documento para calcular el costo consular.'}
-                                      {documents.length > 0 && (
-                                        consularDocumentTariff
-                                          ? `${formatPrice(consularDocumentTariff)} por documento · ${formatPrice({
-                                            price: documents.length * consularDocumentTariff.price,
-                                            currency: consularDocumentTariff.currency,
-                                          })} total`
-                                          : 'Precio del documento por confirmar'
+                                      Costo del documento:{' '}
+                                      <strong>{consularDocumentTariff
+                                        ? `${formatPrice(consularDocumentTariff)} cada uno`
+                                        : 'Precio por confirmar'}</strong>
+                                      {documents.length > 0 && consularDocumentTariff && (
+                                        <> · {documents.length} adjunto{documents.length === 1 ? '' : 's'}: <strong>{formatPrice({
+                                          price: documents.length * consularDocumentTariff.price,
+                                          currency: consularDocumentTariff.currency,
+                                        })}</strong></>
                                       )}
+                                      {!documents.length && <> · Adjunta el archivo para calcular el subtotal.</>}
                                     </p>
                                   </div>
                                 )}
@@ -1089,9 +1088,7 @@ function ApplicationForm() {
                             )}
                           </div>
                         )
-                      })}
-                    </div>
-                  ))}
+                  })}
                 </div>
               </fieldset>
 
