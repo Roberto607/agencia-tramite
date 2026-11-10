@@ -933,7 +933,7 @@ function ApplicationForm() {
                   value={applicationCountry}
                 />
                 <span className="field-hint">
-                  Para sumar costos consulares, selecciona el país, marca «Legalizar este trámite en consulado» y adjunta el documento.
+                  Para sumar costos consulares, selecciona el país y elige «Legalización consular» en la tarifa del trámite.
                 </span>
               </div>
 
@@ -1010,41 +1010,42 @@ function ApplicationForm() {
                             </div>
                             {isSelected && (
                               <div className="service-option__details">
-                                {pricingGroups && (
-                                  <div className="service-option__pricing">
-                                    {pricingGroups.map((group) => (
-                                      <label className="service-option__price-field" key={group.id}>
-                                        <span>{group.label}</span>
-                                        <select
-                                          onChange={(event) => setSelectedPricingOptions((current) => ({
-                                            ...current,
-                                            [value]: { ...current[value], [group.id]: event.target.value },
-                                          }))}
-                                          value={selectedPricingOptions[value]?.[group.id] ?? ''}
-                                        >
-                                          <option value="">No incluir</option>
-                                          {group.options.map((option) => (
-                                            <option key={option.id} value={option.id}>
-                                              {option.label} · {option.time} · {formatPrice(option)}
-                                            </option>
-                                          ))}
-                                        </select>
-                                      </label>
-                                    ))}
-                                  </div>
-                                )}
-                                <label className="service-option__consular-toggle">
-                                  <input
-                                    checked={isConsularSelected}
-                                    onChange={(event) => setConsularServices((current) => (
-                                      event.target.checked
-                                        ? [...current, value]
-                                        : current.filter((service) => service !== value)
-                                    ))}
-                                    type="checkbox"
-                                  />
-                                  <span>Legalizar este trámite en consulado</span>
-                                </label>
+                                <div className="service-option__pricing">
+                                  {pricingGroups?.map((group) => (
+                                    <label className="service-option__price-field" key={group.id}>
+                                      <span>{group.label}</span>
+                                      <select
+                                        onChange={(event) => setSelectedPricingOptions((current) => ({
+                                          ...current,
+                                          [value]: { ...current[value], [group.id]: event.target.value },
+                                        }))}
+                                        value={selectedPricingOptions[value]?.[group.id] ?? ''}
+                                      >
+                                        <option value="">No incluir</option>
+                                        {group.options.map((option) => (
+                                          <option key={option.id} value={option.id}>
+                                            {option.label} · {option.time} · {formatPrice(option)}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </label>
+                                  ))}
+                                  <label className="service-option__price-field">
+                                    <span>Legalización en consulado</span>
+                                    <select
+                                      aria-label={`Legalización en consulado para ${label}`}
+                                      onChange={(event) => setConsularServices((current) => (
+                                        event.target.value
+                                          ? current.includes(value) ? current : [...current, value]
+                                          : current.filter((service) => service !== value)
+                                      ))}
+                                      value={isConsularSelected ? 'consular' : ''}
+                                    >
+                                      <option value="">No incluir</option>
+                                      <option value="consular">Legalización consular</option>
+                                    </select>
+                                  </label>
+                                </div>
                                 {isConsularSelected && (
                                   <div className="service-option__consular-pricing">
                                     <p>País del consulado: <strong>{applicationCountry || 'selecciona un país arriba'}</strong></p>
