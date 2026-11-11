@@ -489,23 +489,21 @@ function ApplicationForm() {
       }),
   )
   const selectedConsularServices = selectedServices.filter((service) => consularServices.includes(service))
-  const consularPricingDetails = selectedConsularServices.flatMap((service, index) => {
+  const consularPricingDetails = selectedConsularServices.flatMap((service) => {
     const serviceInfo = serviceCatalog.find((item) => item.value === service)
     const enteredCount = Number.parseInt(consularDocumentCounts[service] ?? '', 10)
     const documentCount = Number.isFinite(enteredCount) && enteredCount > 0 ? enteredCount : 0
     const documentTariff = getConsularDocumentTariff(applicationCountry, service)
     const details = []
-    if (index === 0) {
-      details.push({
-        service,
-        service_label: serviceInfo?.label ?? service,
-        group: 'Gestión consular',
-        option: 'Una solicitud',
-        time: 'Tiempo por confirmar',
-        price: apostilleTariff?.management.price ?? null,
-        currency: apostilleTariff?.management.currency ?? null,
-      })
-    }
+    details.push({
+      service,
+      service_label: serviceInfo?.label ?? service,
+      group: 'Gestión consular',
+      option: 'Por trámite',
+      time: 'Tiempo por confirmar',
+      price: apostilleTariff?.management.price ?? null,
+      currency: apostilleTariff?.management.currency ?? null,
+    })
     if (documentCount > 0) {
       details.push({
         service,
@@ -551,7 +549,7 @@ function ApplicationForm() {
         : [`  - ${service?.note ?? 'Tiempo y costo por confirmar.'}`]
       if (consularServices.includes(serviceValue)) {
         details.push(
-          `  - Gestión consular (se cobra una sola vez por solicitud): ${apostilleTariff?.management ? formatPrice(apostilleTariff.management) : 'Precio por confirmar'}.`,
+          `  - Gestión consular (por este trámite): ${apostilleTariff?.management ? formatPrice(apostilleTariff.management) : 'Precio por confirmar'}.`,
         )
       }
       if (serviceValue === 'otros' && otherServiceDescription.trim()) {
@@ -1052,7 +1050,7 @@ function ApplicationForm() {
                                   <div className="service-option__consular-pricing">
                                     <p>País del consulado: <strong>{applicationCountry || 'selecciona un país arriba'}</strong></p>
                                     <p>
-                                      Gestión consular (se cobra una sola vez por solicitud):{' '}
+                                      Gestión consular (por este trámite):{' '}
                                       <strong>{apostilleTariff?.management
                                         ? formatPrice(apostilleTariff.management)
                                         : 'Precio por confirmar'}</strong>
@@ -1141,7 +1139,7 @@ function ApplicationForm() {
                               ))}
                               {consularSelected && (
                                 <li key="consular-management">
-                                  Gestión consular (se cobra una sola vez por solicitud):{' '}
+                                  Gestión consular (por este trámite):{' '}
                                   {apostilleTariff?.management
                                     ? formatPrice(apostilleTariff.management)
                                     : 'Precio por confirmar'}
@@ -1150,7 +1148,7 @@ function ApplicationForm() {
                             </ul>
                             : <span className="service-summary__pending">
                               {consularSelected
-                                ? `Gestión consular (se cobra una sola vez por solicitud): ${apostilleTariff?.management ? formatPrice(apostilleTariff.management) : 'Precio por confirmar'}.`
+                                ? `Gestión consular (por este trámite): ${apostilleTariff?.management ? formatPrice(apostilleTariff.management) : 'Precio por confirmar'}.`
                                 : service?.note ?? 'Selecciona las opciones de servicio que necesitas.'}
                             </span>}
                         </li>
