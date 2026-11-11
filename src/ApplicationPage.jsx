@@ -541,12 +541,19 @@ function ApplicationForm() {
     'Trámites solicitados:',
     ...selectedServices.flatMap((serviceValue) => {
       const service = serviceCatalog.find((item) => item.value === serviceValue)
-      const options = selectedPricingDetails.filter((item) => item.service === serviceValue)
+      const options = selectedPricingDetails.filter(
+        (item) => item.service === serviceValue && item.group !== 'Gestión consular',
+      )
       const details = options.length > 0
         ? options.map((option) =>
           `  - ${option.group}: ${option.option} | ${option.time} | ${formatPrice(option)}`,
         )
         : [`  - ${service?.note ?? 'Tiempo y costo por confirmar.'}`]
+      if (consularServices.includes(serviceValue)) {
+        details.push(
+          `  - Gestión consular (se cobra una sola vez por solicitud): ${apostilleTariff?.management ? formatPrice(apostilleTariff.management) : 'Precio por confirmar'}.`,
+        )
+      }
       if (serviceValue === 'otros' && otherServiceDescription.trim()) {
         details.push(`  - Detalle: ${otherServiceDescription.trim()}`)
       }
@@ -1118,8 +1125,10 @@ function ApplicationForm() {
                   <ul>
                     {selectedServices.map((serviceValue) => {
                       const service = serviceCatalog.find((item) => item.value === serviceValue)
-                      const options = selectedPricingDetails.filter((item) => item.service === serviceValue)
                       const consularSelected = consularServices.includes(serviceValue)
+                      const options = selectedPricingDetails.filter(
+                        (item) => item.service === serviceValue && item.group !== 'Gestión consular',
+                      )
                       return (
                         <li key={serviceValue}>
                           <strong>{service?.label}</strong>
@@ -1130,10 +1139,18 @@ function ApplicationForm() {
                                   {option.group}: {option.option} · {option.time} · {formatPrice(option)}
                                 </li>
                               ))}
+                              {consularSelected && (
+                                <li key="consular-management">
+                                  Gestión consular (se cobra una sola vez por solicitud):{' '}
+                                  {apostilleTariff?.management
+                                    ? formatPrice(apostilleTariff.management)
+                                    : 'Precio por confirmar'}
+                                </li>
+                              )}
                             </ul>
                             : <span className="service-summary__pending">
                               {consularSelected
-                                ? 'Legalización consular seleccionada. La gestión se suma una vez por solicitud.'
+                                ? `Gestión consular (se cobra una sola vez por solicitud): ${apostilleTariff?.management ? formatPrice(apostilleTariff.management) : 'Precio por confirmar'}.`
                                 : service?.note ?? 'Selecciona las opciones de servicio que necesitas.'}
                             </span>}
                         </li>
