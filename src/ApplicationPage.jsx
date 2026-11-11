@@ -1057,7 +1057,6 @@ function ApplicationForm() {
                                           currency: consularDocumentTariff.currency,
                                         })}</strong></>
                                       )}
-                                      {!documents.length && <> · Adjunta el archivo para calcular el subtotal.</>}
                                     </p>
                                   </div>
                                 )}
