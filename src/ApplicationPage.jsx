@@ -693,15 +693,6 @@ function ApplicationForm() {
       setSubmissionError(`Selecciona al menos una opción para ${service?.label}.`)
       return
     }
-    const consularServiceMissingDocuments = selectedConsularServices.find(
-      (service) => !(serviceDocuments[service] ?? []).length,
-    )
-    if (consularServiceMissingDocuments) {
-      const service = serviceCatalog.find((item) => item.value === consularServiceMissingDocuments)
-      setSubmissionError(`Adjunta al menos un documento para legalizar ${service?.label ?? 'el trámite'} en el consulado.`)
-      return
-    }
-
     const formElement = event.currentTarget
     const formData = new FormData(formElement)
     Object.entries(profile).forEach(([field, value]) => {
