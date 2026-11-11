@@ -145,6 +145,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .service-option__consular-pricing { display: grid; gap: 5px; margin: 8px 0 2px 25px; padding: 9px 10px; border-radius: 4px; background: #f3f7fc; }
 .service-option__consular-pricing > p { margin: 0; color: #536780; font-size: 12px; font-weight: 400; }
 .service-option__consular-pricing strong { color: #173456; }
+.service-option__consular-quantity { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #536780; font-size: 12px; }
+.service-option__consular-quantity input { width: 76px; min-height: 34px; padding: 4px 8px; border: 1px solid #cbd6e5; border-radius: 4px; background: #fff; color: #173456; font: inherit; font-size: 13px; }
 .service-option__note { margin: 9px 0 2px; padding-top: 9px; border-top: 1px solid #dce5f1; color: #536780; font-size: 12px; font-weight: 400; }
 .service-summary { padding: 16px; border: 1px solid #cbdcf3; border-radius: 5px; background: #f5f8fd; }
 .service-summary h3 { margin: 0 0 10px; color: #0c2851; font-size: 16px; }

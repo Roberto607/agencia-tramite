@@ -465,6 +465,7 @@ function ApplicationForm() {
   const [applicationCountry, setApplicationCountry] = useState('')
   const [selectedServices, setSelectedServices] = useState([])
   const [consularServices, setConsularServices] = useState([])
+  const [consularDocumentCounts, setConsularDocumentCounts] = useState({})
   const [selectedPricingOptions, setSelectedPricingOptions] = useState({})
   const [serviceDocuments, setServiceDocuments] = useState({})
   const [otherServiceDescription, setOtherServiceDescription] = useState('')
@@ -490,7 +491,7 @@ function ApplicationForm() {
   const selectedConsularServices = selectedServices.filter((service) => consularServices.includes(service))
   const consularPricingDetails = selectedConsularServices.flatMap((service, index) => {
     const serviceInfo = serviceCatalog.find((item) => item.value === service)
-    const attachedCount = (serviceDocuments[service] ?? []).length
+    const documentCount = consularDocumentCounts[service] ?? 1
     const documentTariff = getConsularDocumentTariff(applicationCountry, service)
     const details = []
     if (index === 0) {
@@ -504,17 +505,15 @@ function ApplicationForm() {
         currency: apostilleTariff?.management.currency ?? null,
       })
     }
-    if (attachedCount > 0) {
-      details.push({
-        service,
-        service_label: serviceInfo?.label ?? service,
-        group: 'Legalización consular',
-        option: `${attachedCount} documento${attachedCount === 1 ? '' : 's'}`,
-        time: 'Tiempo por confirmar',
-        price: documentTariff ? attachedCount * documentTariff.price : null,
-        currency: documentTariff?.currency ?? null,
-      })
-    }
+    details.push({
+      service,
+      service_label: serviceInfo?.label ?? service,
+      group: 'Legalización consular',
+      option: `${documentCount} documento${documentCount === 1 ? '' : 's'}`,
+      time: 'Tiempo por confirmar',
+      price: documentTariff ? documentCount * documentTariff.price : null,
+      currency: documentTariff?.currency ?? null,
+    })
     return details
   })
   const selectedPricingDetails = [...basePricingDetails, ...consularPricingDetails]
@@ -1025,11 +1024,19 @@ function ApplicationForm() {
                                     <span>Legalización en consulado</span>
                                     <select
                                       aria-label={`Legalización en consulado para ${label}`}
-                                      onChange={(event) => setConsularServices((current) => (
-                                        event.target.value
-                                          ? current.includes(value) ? current : [...current, value]
-                                          : current.filter((service) => service !== value)
-                                      ))}
+                                      onChange={(event) => {
+                                        setConsularServices((current) => (
+                                          event.target.value
+                                            ? current.includes(value) ? current : [...current, value]
+                                            : current.filter((service) => service !== value)
+                                        ))
+                                        if (event.target.value) {
+                                          setConsularDocumentCounts((current) => ({
+                                            ...current,
+                                            [value]: current[value] ?? 1,
+                                          }))
+                                        }
+                                      }}
                                       value={isConsularSelected ? 'consular' : ''}
                                     >
                                       <option value="">No incluir</option>
@@ -1047,16 +1054,31 @@ function ApplicationForm() {
                                         : 'Precio por confirmar'}</strong>
                                     </p>
                                     <p>
-                                      Costo del documento:{' '}
+                                      <label className="service-option__consular-quantity">
+                                        Cantidad de documentos a legalizar
+                                        <input
+                                          aria-label={`Cantidad de documentos a legalizar para ${label}`}
+                                          min="1"
+                                          onChange={(event) => {
+                                            const count = Number.parseInt(event.target.value, 10)
+                                            setConsularDocumentCounts((current) => ({
+                                              ...current,
+                                              [value]: Number.isFinite(count) && count > 0 ? count : 1,
+                                            }))
+                                          }}
+                                          type="number"
+                                          value={consularDocumentCounts[value] ?? 1}
+                                        />
+                                      </label>
+                                    </p>
+                                    <p>
+                                      Costo consular de documentos:{' '}
                                       <strong>{consularDocumentTariff
-                                        ? `${formatPrice(consularDocumentTariff)} cada uno`
-                                        : 'Precio por confirmar'}</strong>
-                                      {documents.length > 0 && consularDocumentTariff && (
-                                        <> · {documents.length} adjunto{documents.length === 1 ? '' : 's'}: <strong>{formatPrice({
-                                          price: documents.length * consularDocumentTariff.price,
+                                        ? `${formatPrice(consularDocumentTariff)} cada uno · ${formatPrice({
+                                          price: (consularDocumentCounts[value] ?? 1) * consularDocumentTariff.price,
                                           currency: consularDocumentTariff.currency,
-                                        })}</strong></>
-                                      )}
+                                        })} total`
+                                        : 'Precio por confirmar'}</strong>
                                     </p>
                                   </div>
                                 )}
