@@ -547,13 +547,6 @@ function ApplicationForm() {
           `  - ${option.group}: ${option.option} | ${option.time} | ${formatPrice(option)}`,
         )
         : [`  - ${service?.note ?? 'Tiempo y costo por confirmar.'}`]
-      if (consularServices.includes(serviceValue)) {
-        const documentTariff = getConsularDocumentTariff(applicationCountry, serviceValue)
-        const documentCount = Number.parseInt(consularDocumentCounts[serviceValue] ?? '', 10)
-        details.push(
-          `  - Costo consular por documento: ${documentTariff ? `${formatPrice(documentTariff)} cada uno` : 'Precio por confirmar'}${documentTariff && documentCount > 0 ? ` · ${documentCount} documento${documentCount === 1 ? '' : 's'}: ${formatPrice({ price: documentCount * documentTariff.price, currency: documentTariff.currency })}` : ''}.`,
-        )
-      }
       if (serviceValue === 'otros' && otherServiceDescription.trim()) {
         details.push(`  - Detalle: ${otherServiceDescription.trim()}`)
       }
@@ -1127,28 +1120,22 @@ function ApplicationForm() {
                       const service = serviceCatalog.find((item) => item.value === serviceValue)
                       const options = selectedPricingDetails.filter((item) => item.service === serviceValue)
                       const consularSelected = consularServices.includes(serviceValue)
-                      const documentTariff = consularSelected
-                        ? getConsularDocumentTariff(applicationCountry, serviceValue)
-                        : null
                       return (
                         <li key={serviceValue}>
                           <strong>{service?.label}</strong>
-                          {options.length > 0 || consularSelected
+                          {options.length > 0
                             ? <ul>
                               {options.map((option) => (
-                              <li key={`${option.group}-${option.option}`}>
-                                {option.group}: {option.option} · {option.time} · {formatPrice(option)}
-                              </li>
-                              ))}
-                              {consularSelected && (
-                                <li key="consular-document-unit-price">
-                                  Costo consular por documento: {documentTariff
-                                    ? `${formatPrice(documentTariff)} cada uno`
-                                    : 'Precio por confirmar'}
+                                <li key={`${option.group}-${option.option}`}>
+                                  {option.group}: {option.option} · {option.time} · {formatPrice(option)}
                                 </li>
-                              )}
+                              ))}
                             </ul>
-                            : <span className="service-summary__pending">{service?.note ?? 'Selecciona las opciones de servicio que necesitas.'}</span>}
+                            : <span className="service-summary__pending">
+                              {consularSelected
+                                ? 'Legalización consular seleccionada. La gestión se suma una vez por solicitud.'
+                                : service?.note ?? 'Selecciona las opciones de servicio que necesitas.'}
+                            </span>}
                         </li>
                       )
                     })}
