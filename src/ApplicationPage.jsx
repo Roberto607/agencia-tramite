@@ -326,6 +326,8 @@ const apostilleTariffs = {
   },
 }
 
+const paymentNotice = 'Información importante: Los trámites comenzarán una vez recibido el pago del monto requerido.'
+
 function getConsularDocumentTariff(country, service) {
   const countryTariff = apostilleTariffs[country]
   return countryTariff?.documentPrices?.[service] ?? countryTariff?.defaultDocument
@@ -564,6 +566,8 @@ function ApplicationForm() {
       : []),
     '',
     `Total estimado: ${formattedTotal}`,
+    '',
+    paymentNotice,
     ...(hasUnpricedSelection || hasCustomPricedServices
       ? ['Hay conceptos cuyo precio debe confirmarse al revisar la solicitud.']
       : []),
@@ -1159,6 +1163,7 @@ function ApplicationForm() {
                   <p className="service-summary__total">
                     Total estimado: {formattedTotal}
                   </p>
+                  <p className="payment-notice">{paymentNotice}</p>
                   {hasUnpricedSelection && (
                     <p className="service-summary__note">El total no incluye los conceptos marcados «Precio a consultar».</p>
                   )}
@@ -1227,6 +1232,7 @@ function ApplicationForm() {
                   <small>El total no incluye los conceptos cuyo precio debe confirmarse.</small>
                 )}
               </div>
+              <p className="payment-notice">{paymentNotice}</p>
               <div className="application-complete__contact">
                 <div>
                   <strong>Falta enviarlos por WhatsApp</strong>
